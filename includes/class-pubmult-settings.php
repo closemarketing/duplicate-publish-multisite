@@ -17,7 +17,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * @since 1.0
  */
-class PUBMULT_Admin {
+class PUBMULT_Settings {
 
 	/**
 	 * Construct of Class
@@ -49,6 +49,11 @@ class PUBMULT_Admin {
 		);
 	}
 
+	/**
+	 * Loads admin styles
+	 *
+	 * @return void
+	 */
 	public function load_admin_styles() {
 		wp_enqueue_style(
 			'admin_css_foo',
@@ -148,18 +153,29 @@ class PUBMULT_Admin {
 		esc_html_e( 'Rellena a continuación los ajustes del envío de contrato.', 'publish-multisite' );
 	}
 
+	/**
+	 * Get list to sites publish
+	 *
+	 * @return array
+	 */
 	private function get_sites_publish() {
-		$sites = array();
+		$sites    = array();
 		$subsites = get_sites();
-		foreach( $subsites as $subsite ) {
-			$subsite_id = get_object_vars($subsite)["blog_id"];
-			$subsite_name = get_blog_details($subsite_id)->blogname;
+		foreach ( $subsites as $subsite ) {
+			$subsite_id           = get_object_vars( $subsite )['blog_id'];
+			$subsite_name         = get_blog_details( $subsite_id )->blogname;
 			$sites[ $subsite_id ] = $subsite_name;
 		}
 
 		return $sites;
 	}
 
+	/**
+	 * Get categories from.
+	 *
+	 * @param integer $site Site ID.
+	 * @return array
+	 */
 	private function get_categories_from( $site = 0 ) {
 		$posts_options = array();
 		if ( 0 !== $site ) {
@@ -176,7 +192,7 @@ class PUBMULT_Admin {
 			// * Get posts in array
 			$posts_options[] = '--- ' . $taxonomy_obj->label . ' ---';
 
-			$args_query          = array(
+			$args_query  = array(
 				'taxonomy'   => $taxonomy,
 				'hide_empty' => false,
 				'orderby'    => 'title', // menu_order, rand, date.
@@ -190,6 +206,7 @@ class PUBMULT_Admin {
 					$term_name  .= $term_parent->name . ' > ';
 				}
 				$term_name .= $term->name;
+
 				$posts_options[ $taxonomy . '|' . $term->term_id ] = $term_name;
 			}
 		}
@@ -206,16 +223,17 @@ class PUBMULT_Admin {
 	 * @return void
 	 */
 	public function musite_callback() {
-		$options = get_option( 'publish_mu_setttings' );
+		$options       = get_option( 'publish_mu_setttings' );
 		$sites_options = $this->get_sites_publish();
 		$posts_options = $this->get_categories_from();
 		$size          = isset( $options['musite'] ) ? count( $options['musite'] ) : 0;
+
 		for ( $idx = 0, $size; $idx <= $size; ++$idx ) {
 			?>
 			<div class="publishmu repeating" style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
 				<div class="save-item">
-					<p><strong><?php esc_html_e( 'Category from load', 'publish-multisite' );?></strong></p>
-					<select name='publish_mu_setttings[musite][<?php echo $idx; ?>][taxonomy]'>
+					<p><strong><?php esc_html_e( 'Category from load', 'publish-multisite' ); ?></strong></p>
+					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][taxonomy]'>
 						<option value=''></option>
 						<?php
 						$taxonomy = isset( $options['musite'][ $idx ]['taxonomy'] ) ? $options['musite'][ $idx ]['taxonomy'] : '';
@@ -229,8 +247,8 @@ class PUBMULT_Admin {
 					</select>
 				</div>
 				<div class="save-item">
-					<p><strong><?php esc_html_e( 'Site to publish', 'publish-multisite' );?></strong></p>
-					<select name='publish_mu_setttings[musite][<?php echo $idx; ?>][site]'>
+					<p><strong><?php esc_html_e( 'Site to publish', 'publish-multisite' ); ?></strong></p>
+					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][site]'>
 						<option value=''></option>
 						<?php
 						$site = isset( $options['musite'][ $idx ]['site'] ) ? $options['musite'][ $idx ]['site'] : '';
@@ -244,12 +262,13 @@ class PUBMULT_Admin {
 					</select>
 				</div>
 				<div class="save-item">
-					<p><strong><?php esc_html_e( 'Category to publish', 'publish-multisite' );?></strong></p>
-					<select name='publish_mu_setttings[musite][<?php echo $idx; ?>][target_cat]'>
+					<p><strong><?php esc_html_e( 'Category to publish', 'publish-multisite' ); ?></strong></p>
+					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][target_cat]'>
 						<option value=''></option>
 						<?php
 						$site_target = isset( $options['musite'][ $idx ]['site'] ) ? $options['musite'][ $idx ]['site'] : '';
 						$target_cat  = isset( $options['musite'][ $idx ]['target_cat'] ) ? $options['musite'][ $idx ]['target_cat'] : '';
+
 						$cats_target_options = $this->get_categories_from( $site_target );
 						// Load Page Options.
 						foreach ( $cats_target_options as $key => $value ) {
@@ -262,7 +281,7 @@ class PUBMULT_Admin {
 				</div>
 				<div class="save-item">
 					<p><strong><?php esc_html_e( 'Author' ); ?></strong></p>
-					<input type="text" size="30" name="publish_mu_setttings[musite][<?php echo $idx; ?>][author]" value="<?php echo isset( $options['musite'][ $idx ]['author'] ) ? $options['musite'][ $idx ]['author'] : ''; ?>" />
+					<input type="text" size="30" name="publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][author]" value="<?php echo isset( $options['musite'][ $idx ]['author'] ) ? esc_html( $options['musite'][ $idx ]['author'] ) : ''; ?>" />
 				</div>
 				<div class="save-item">
 					<p><a href="#" class="repeat"><?php esc_html_e( 'Add Another', 'publish-multisite' ); ?></a></p>
@@ -303,5 +322,5 @@ class PUBMULT_Admin {
 }
 
 if ( is_admin() ) {
-	new PUBMULT_Admin();
+	new PUBMULT_Settings();
 }

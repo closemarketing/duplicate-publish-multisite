@@ -36,5 +36,5 @@ function pubmult_plugin_init() {
 }
 
 // Include files.
-require_once plugin_dir_path( __FILE__ ) . '/includes/class-admin-settings.php';
+require_once plugin_dir_path( __FILE__ ) . '/includes/class-pubmult-settings.php';
 require_once plugin_dir_path( __FILE__ ) . '/includes/class-admin-publishmu.php';
