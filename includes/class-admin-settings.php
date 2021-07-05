@@ -209,7 +209,8 @@ class PUBMULT_Admin {
 		$options = get_option( 'publish_mu_setttings' );
 		$sites_options = $this->get_sites_publish();
 		$posts_options = $this->get_categories_from();
-		for ( $idx = 0, $size = count( $options['musite'] ); $idx <= $size; ++$idx ) {
+		$size          = isset( $options['musite'] ) ? count( $options['musite'] ) : 0;
+		for ( $idx = 0, $size; $idx <= $size; ++$idx ) {
 			?>
 			<div class="publishmu repeating" style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
 				<div class="save-item">
