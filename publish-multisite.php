@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name: Publish Duplicate Post to Multisite
- * Plugin URI:  publish-multisite
+ * Plugin URI:  duplicate-publish-multisite
  * Description: Publish duplicated post to multisite based on category.
  * Version:     1.0
  * Author:      Closemarketing
  * Author URI:  https://close.marketing
- * Text Domain: publish-multisite
+ * Text Domain: duplicate-publish-multisite
  * Domain Path: /languages
  * License:     GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
@@ -32,7 +32,7 @@ add_action( 'plugins_loaded', 'pubmult_plugin_init' );
  * @return void
  */
 function pubmult_plugin_init() {
-	load_plugin_textdomain( 'publish-multisite', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
+	load_plugin_textdomain( 'duplicate-publish-multisite', false, dirname( plugin_basename( __FILE__ ) ) . '/languages' );
 }
 
 // Include files.
