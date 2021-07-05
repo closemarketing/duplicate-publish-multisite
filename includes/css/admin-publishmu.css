@@ -1,0 +1,6 @@
+.publishmu.repeating {
+	display: flex;
+}
+.publishmu.repeating .save-item {
+	margin-right: 15px;
+}
