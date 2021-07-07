@@ -1,11 +1,14 @@
 === Duplicate Publish Multisite ===
 Contributors: closemarketing, davidperez, sacrajaimez
 Tags: multisite, duplicate
+Donate link: https://www.closemarketing.es/go/donate/
 Donate link: 
 Requires at least: 4.0
 Tested up to: 5.8
 Stable tag: 1.1
 Version: 1.1
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Duplicates a post and publish in a subsite.
 
