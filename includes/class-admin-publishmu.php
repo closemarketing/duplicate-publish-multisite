@@ -79,8 +79,9 @@ class PUBMULT_Publish {
 	 */
 	private function update_post( $site, $source_post_id, $target_post_id = false ) {
 		// Get data to copy.
-		$source_post = get_post( $source_post_id );
-		$source_data = get_post_custom( $source_post_id );
+		$source_post      = get_post( $source_post_id );
+		$source_data      = get_post_custom( $source_post_id );
+		$source_permalink = get_the_permalink( $source_post_id );
 
 		// Get image data.
 		$post_thumbnail_id = get_post_thumbnail_id( $source_post_id );
@@ -132,55 +133,77 @@ class PUBMULT_Publish {
 			if ( is_array( $image_url ) ) {
 				$image_url = $image_url[0];
 			} else {
-				return;
+				$image_data = file_get_contents( $image_url ); //phpcs:ignore
+				$filename   = basename( $image_url );
+
+				// Check folder permission and define file location.
+				if ( wp_mkdir_p( $upload_dir['path'] ) ) {
+					$file = $upload_dir['path'] . '/' . $filename;
+				} else {
+					$file = $upload_dir['basedir'] . '/' . $filename;
+				}
+
+				if ( $image_data ) {
+					// Create the image  file on the server.
+					file_put_contents( $file, $image_data ); //phpcs:ignore
+		
+					// Check image file type.
+					$wp_filetype = wp_check_filetype( $filename, null );
+		
+					// Set attachment data.
+					$attachment = array(
+						'post_mime_type' => $wp_filetype['type'],
+						'post_title'     => sanitize_file_name( $filename ),
+						'post_content'   => '',
+						'post_status'    => 'inherit',
+					);
+
+					// Create the attachment.
+					$attach_id = wp_insert_attachment( $attachment, $file, $target_post_id );
+
+					// Include image.php.
+					require_once ABSPATH . 'wp-admin/includes/image.php';
+
+					// Define attachment metadata.
+					$attach_data = wp_generate_attachment_metadata( $attach_id, $file );
+
+					// Assign metadata to attachment.
+					wp_update_attachment_metadata( $attach_id, $attach_data );
+
+					$this->log_it( 'attachment id:' . $attach_id );
+
+					// And finally assign featured image to post.
+					set_post_thumbnail( $target_post_id, $attach_id );
+				}
 			}
-			$image_data = file_get_contents( $image_url ); //phpcs:ignore
-			$filename   = basename( $image_url );
-
-			// Check folder permission and define file location.
-			if ( wp_mkdir_p( $upload_dir['path'] ) ) {
-				$file = $upload_dir['path'] . '/' . $filename;
-			} else {
-				$file = $upload_dir['basedir'] . '/' . $filename;
-			}
-
-			if ( $image_data ) {
-				// Create the image  file on the server.
-				file_put_contents( $file, $image_data ); //phpcs:ignore
-	
-				// Check image file type.
-				$wp_filetype = wp_check_filetype( $filename, null );
-	
-				// Set attachment data.
-				$attachment = array(
-					'post_mime_type' => $wp_filetype['type'],
-					'post_title'     => sanitize_file_name( $filename ),
-					'post_content'   => '',
-					'post_status'    => 'inherit',
-				);
-
-				// Create the attachment.
-				$attach_id = wp_insert_attachment( $attachment, $file, $target_post_id );
-
-				// Include image.php.
-				require_once ABSPATH . 'wp-admin/includes/image.php';
-
-				// Define attachment metadata.
-				$attach_data = wp_generate_attachment_metadata( $attach_id, $file );
-
-				// Assign metadata to attachment.
-				wp_update_attachment_metadata( $attach_id, $attach_data );
-
-				$this->log_it( 'attachment id:' . $attach_id );
-
-				// And finally assign featured image to post.
-				set_post_thumbnail( $target_post_id, $attach_id );
-			}
-
 		}
+
+		// Adds canonical SEO.
+		$this->adds_seo_tags( $source_permalink, $target_post_id );
+
 		switch_to_blog( $original_blog_id );
 
 		update_post_meta( $source_post_id, 'publish_mu_site_' . $site, $target_post_id );
+	}
+
+	/**
+	 * Adds SEO Tags
+	 *
+	 * @param string  $url URL from canonical.
+	 * @param integer $post_id Post id target.
+	 * @return void
+	 */
+	private function adds_seo_tags( $url, $post_id ) {
+
+		$this->log_it( 'Canonical' . $url );
+
+		if ( is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
+			$this->log_it( 'Canonical rank:' . $url . ' pid' . $post_id );
+
+			add_post_meta( $post_id, 'rank_math_canonical_url', $url );
+		} elseif ( is_plugin_active( 'wordpress-seo/wp-seo.php' ) || is_plugin_active( 'wordpress-seo-premium/wp-seo-premium.php' ) ) {
+			add_post_meta( $post_id, '_yoast_wpseo_canonical', $url );
+		}
 	}
 
 	/**
