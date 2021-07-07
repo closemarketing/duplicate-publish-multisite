@@ -6,6 +6,10 @@
 .publishmu.repeating .save-item {
 	margin-right: 15px;
 }
+.publishmu.repeating select,
+.publishmu.repeating input {
+	max-width: 100%;
+}
 .publishmu.repeating .button.remove {
 	margin: 10px 5px 5px;
 }
