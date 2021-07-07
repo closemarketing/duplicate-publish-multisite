@@ -49,15 +49,16 @@ class PUBMULT_Publish {
 		$this->log_it( $options );
 		if ( isset( $options['musite'] ) && $options['musite'] ) {
 			foreach ( $options['musite'] as $site ) {
-				$tax      = explode( '|', $site['taxonomy'] );
-				$tax_name = $tax[0];
-				$term_id  = $tax[1];
+				$tax         = explode( '|', $site['taxonomy'] );
+				$tax_name    = $tax[0];
+				$term_id     = $tax[1];
+				$check_terms = array( $term_id );
 
-				$check_terms[]  = $term_id;
 				$children_terms = get_term_children( $term_id, $tax_name );
 				if ( $children_terms ) {
 					$check_terms = array_merge( $children_terms, $check_terms );
 				}
+				$this->log_it( 'Terms: ' . implode( ',', $check_terms ) );
 				if ( has_term( $check_terms, $tax_name, $post->ID ) ) {
 					$target_post_id = get_post_meta( $post->ID, 'publish_mu_site_' . $site['site'], true );
 					$this->update_post( $site['site'], $post->ID, $target_post_id );
@@ -84,7 +85,6 @@ class PUBMULT_Publish {
 		// Get image data.
 		$post_thumbnail_id = get_post_thumbnail_id( $source_post_id );
 		$image_url         = wp_get_attachment_image_src( $post_thumbnail_id, 'full' );
-		$image_url         = $image_url[0];
 
 		// Copy data.
 		$original_blog_id = get_current_blog_id();
@@ -129,6 +129,11 @@ class PUBMULT_Publish {
 		if ( ! has_post_thumbnail( $target_post_id ) ) {
 			// Add Featured Image to Post.
 			$upload_dir = wp_upload_dir();
+			if ( is_array( $image_url ) ) {
+				$image_url = $image_url[0];
+			} else {
+				return;
+			}
 			$image_data = file_get_contents( $image_url ); //phpcs:ignore
 			$filename   = basename( $image_url );
 
@@ -139,36 +144,38 @@ class PUBMULT_Publish {
 				$file = $upload_dir['basedir'] . '/' . $filename;
 			}
 
-			// Create the image  file on the server.
-			file_put_contents( $file, $image_data ); //phpcs:ignore
+			if ( $image_data ) {
+				// Create the image  file on the server.
+				file_put_contents( $file, $image_data ); //phpcs:ignore
+	
+				// Check image file type.
+				$wp_filetype = wp_check_filetype( $filename, null );
+	
+				// Set attachment data.
+				$attachment = array(
+					'post_mime_type' => $wp_filetype['type'],
+					'post_title'     => sanitize_file_name( $filename ),
+					'post_content'   => '',
+					'post_status'    => 'inherit',
+				);
 
-			// Check image file type.
-			$wp_filetype = wp_check_filetype( $filename, null );
+				// Create the attachment.
+				$attach_id = wp_insert_attachment( $attachment, $file, $target_post_id );
 
-			// Set attachment data.
-			$attachment = array(
-				'post_mime_type' => $wp_filetype['type'],
-				'post_title'     => sanitize_file_name( $filename ),
-				'post_content'   => '',
-				'post_status'    => 'inherit',
-			);
+				// Include image.php.
+				require_once ABSPATH . 'wp-admin/includes/image.php';
 
-			// Create the attachment.
-			$attach_id = wp_insert_attachment( $attachment, $file, $target_post_id );
+				// Define attachment metadata.
+				$attach_data = wp_generate_attachment_metadata( $attach_id, $file );
 
-			// Include image.php.
-			require_once ABSPATH . 'wp-admin/includes/image.php';
+				// Assign metadata to attachment.
+				wp_update_attachment_metadata( $attach_id, $attach_data );
 
-			// Define attachment metadata.
-			$attach_data = wp_generate_attachment_metadata( $attach_id, $file );
+				$this->log_it( 'attachment id:' . $attach_id );
 
-			// Assign metadata to attachment.
-			wp_update_attachment_metadata( $attach_id, $attach_data );
-
-			$this->log_it( 'attachment id:' . $attach_id );
-
-			// And finally assign featured image to post.
-			set_post_thumbnail( $target_post_id, $attach_id );
+				// And finally assign featured image to post.
+				set_post_thumbnail( $target_post_id, $attach_id );
+			}
 
 		}
 		switch_to_blog( $original_blog_id );
