@@ -27,6 +27,10 @@ class PUBMULT_Settings {
 		add_action( 'admin_menu', array( $this, 'add_plugin_page' ) );
 		add_action( 'admin_init', array( $this, 'page_init' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'load_admin_styles' ) );
+
+		// AJAX.
+		add_action( 'wp_ajax_category_publish', array( $this, 'category_publish' ) );
+		add_action( 'wp_ajax_nopriv_category_publish', array( $this, 'category_publish' ) );
 	}
 
 	/**
@@ -41,8 +45,8 @@ class PUBMULT_Settings {
 	public function add_plugin_page() {
 		add_submenu_page(
 			'options-general.php',
-			__( 'Publish Multisite', 'publish-multisite' ),
-			__( 'Publish Multisite', 'publish-multisite' ),
+			__( 'Publish Multisite', 'duplicate-publish-multisite' ),
+			__( 'Publish Multisite', 'duplicate-publish-multisite' ),
 			'manage_options',
 			'publish_multisite_admin',
 			array( $this, 'create_admin_page' ),
@@ -57,11 +61,26 @@ class PUBMULT_Settings {
 	public function load_admin_styles() {
 		wp_enqueue_style(
 			'admin_css_foo',
-			plugins_url( 'css/admin-publishmu.css', __FILE__ ),
+			plugins_url( 'assets/admin-publishmu.css', __FILE__ ),
 			false,
 			PUBLISHMU_VERSION
 		);
 
+		wp_enqueue_script( 
+			'category-publish',
+			plugins_url( '/assets/category-publish.js', __FILE__ ),
+			array( 'jquery' ),
+			true
+		);
+
+		wp_localize_script(
+			'category-publish',
+			'ajaxAction',
+			array(
+				'url'   => admin_url( 'admin-ajax.php' ),
+				'nonce' => wp_create_nonce( 'category_publish_nonce' ),
+			)
+		);
 	}
 
 	/**
@@ -73,7 +92,7 @@ class PUBMULT_Settings {
 		$this->publish_mu_setttings = get_option( 'publish_mu_setttings' );
 		?>
 		<div class="wrap">
-			<h2><?php esc_html_e( 'Publish Multisite Settings', 'publish_multisite' ); ?>
+			<h2><?php esc_html_e( 'Publish Multisite Settings', 'duplicate-publish-multisite' ); ?>
 			</h2>
 			<p></p>
 			<?php
@@ -83,7 +102,7 @@ class PUBMULT_Settings {
 				<?php
 				settings_fields( 'publish_mu_setttings' );
 				do_settings_sections( 'pubmult-admin' );
-				submit_button( 'Guardar opciones', 'primary', 'submit_settings' );
+				submit_button( __( 'Save options', 'duplicate-publish-multisite' ), 'primary', 'submit_settings' );
 				?>
 			</form>
 		</div>
@@ -104,14 +123,14 @@ class PUBMULT_Settings {
 
 		add_settings_section(
 			'pubmult_setting_section',
-			__( 'Settings for publishing directly multisite', 'publish-multisite' ),
+			__( 'Settings for publishing directly multisite', 'duplicate-publish-multisite' ),
 			array( $this, 'pubmult_section_info' ),
 			'pubmult-admin'
 		);
 
 		add_settings_field(
 			'musite',
-			__( 'Site relations', 'publish-multisite' ),
+			__( 'Site relations', 'duplicate-publish-multisite' ),
 			array( $this, 'musite_callback' ),
 			'pubmult-admin',
 			'pubmult_setting_section'
@@ -150,7 +169,7 @@ class PUBMULT_Settings {
 	 * @return void
 	 */
 	public function pubmult_section_info() {
-		esc_html_e( 'Rellena a continuación los ajustes del envío de contrato.', 'publish-multisite' );
+		esc_html_e( 'Make the relations between sites and categories.', 'duplicate-publish-multisite' );
 	}
 
 	/**
@@ -161,10 +180,14 @@ class PUBMULT_Settings {
 	private function get_sites_publish() {
 		$sites    = array();
 		$subsites = get_sites();
+		
 		foreach ( $subsites as $subsite ) {
-			$subsite_id           = get_object_vars( $subsite )['blog_id'];
+			$subsite_id           = (int) get_object_vars( $subsite )['blog_id'];
 			$subsite_name         = get_blog_details( $subsite_id )->blogname;
-			$sites[ $subsite_id ] = $subsite_name;
+
+			if (  get_current_blog_id() !== $subsite_id ) {
+				$sites[ $subsite_id ] = $subsite_name;
+			}
 		}
 
 		return $sites;
@@ -190,8 +213,6 @@ class PUBMULT_Settings {
 		foreach ( $taxonomies as $taxonomy ) {
 			$taxonomy_obj = get_taxonomy( $taxonomy );
 			// * Get posts in array
-			$posts_options[] = '--- ' . $taxonomy_obj->label . ' ---';
-
 			$args_query  = array(
 				'taxonomy'   => $taxonomy,
 				'hide_empty' => false,
@@ -199,15 +220,18 @@ class PUBMULT_Settings {
 				'order'      => 'ASC',
 			);
 			$terms_array = get_terms( $args_query );
-			foreach ( $terms_array as $term ) {
-				$term_name = '';
-				if ( 0 !== $term->parent ) {
-					$term_parent = get_term_by( 'id', $term->parent, $taxonomy );
-					$term_name  .= $term_parent->name . ' > ';
-				}
-				$term_name .= $term->name;
+			if ( ! empty( $terms_array)){
+				$posts_options[] = '--- ' . $taxonomy_obj->label . ' ---';
+				foreach ( $terms_array as $term ) {
+					$term_name = '';
+					if ( 0 !== $term->parent ) {
+						$term_parent = get_term_by( 'id', $term->parent, $taxonomy );
+						$term_name  .= $term_parent->name . ' > ';
+					}
+					$term_name .= $term->name;
 
-				$posts_options[ $taxonomy . '|' . $term->term_id ] = $term_name;
+					$posts_options[ $taxonomy . '|' . $term->term_id ] = $term_name;
+				}
 			}
 		}
 		if ( 0 !== $site ) {
@@ -216,6 +240,25 @@ class PUBMULT_Settings {
 		return $posts_options;
 	}
 
+	/**
+	 * Ajax function to load info
+	 *
+	 * @return void
+	 */
+	public function category_publish(){
+		$site_id = isset( $_POST['site_id'] ) ? esc_attr( $_POST['site_id'] ) : '';
+		$nonce   = isset( $_POST['nonce'] ) ? esc_attr( $_POST['nonce'] ) : '';
+		check_ajax_referer( 'category_publish_nonce', 'nonce' );
+		if ( true ) {
+			$html = '';
+			foreach ( $this->get_categories_from( $site_id ) as $key => $value ) {
+				$html .= '<option value="' . esc_html( $key ) . '" >' . esc_html( $value ) . '</option>';
+			}
+			wp_send_json_success( $html );
+		} else {
+			wp_send_json_error( array( 'error' => 'Error' ) );
+		}
+	}
 
 	/**
 	 * Spider URL Callback
@@ -226,13 +269,13 @@ class PUBMULT_Settings {
 		$options       = get_option( 'publish_mu_setttings' );
 		$sites_options = $this->get_sites_publish();
 		$posts_options = $this->get_categories_from();
-		$size          = isset( $options['musite'] ) ? count( $options['musite'] ) : 0;
+		$size          = isset( $options['musite'] ) ? count( $options['musite'] ) -1 : 0;
 
 		for ( $idx = 0, $size; $idx <= $size; ++$idx ) {
 			?>
 			<div class="publishmu repeating" style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
 				<div class="save-item">
-					<p><strong><?php esc_html_e( 'Category from load', 'publish-multisite' ); ?></strong></p>
+					<p><strong><?php esc_html_e( 'Category from load', 'duplicate-publish-multisite' ); ?></strong></p>
 					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][taxonomy]'>
 						<option value=''></option>
 						<?php
@@ -247,8 +290,8 @@ class PUBMULT_Settings {
 					</select>
 				</div>
 				<div class="save-item">
-					<p><strong><?php esc_html_e( 'Site to publish', 'publish-multisite' ); ?></strong></p>
-					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][site]'>
+					<p><strong><?php esc_html_e( 'Site to publish', 'duplicate-publish-multisite' ); ?></strong></p>
+					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][site]' class="site-publish" data-row="<?php echo esc_html( $idx ); ?>">
 						<option value=''></option>
 						<?php
 						$site = isset( $options['musite'][ $idx ]['site'] ) ? $options['musite'][ $idx ]['site'] : '';
@@ -262,8 +305,8 @@ class PUBMULT_Settings {
 					</select>
 				</div>
 				<div class="save-item">
-					<p><strong><?php esc_html_e( 'Category to publish', 'publish-multisite' ); ?></strong></p>
-					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][target_cat]'>
+					<p><strong><?php esc_html_e( 'Category to publish', 'duplicate-publish-multisite' ); ?></strong></p>
+					<select id="catid-row-<?php echo esc_html( $idx ); ?>" name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][target_cat]' class="category-publish">
 						<option value=''></option>
 						<?php
 						$site_target = isset( $options['musite'][ $idx ]['site'] ) ? $options['musite'][ $idx ]['site'] : '';
@@ -281,15 +324,16 @@ class PUBMULT_Settings {
 				</div>
 				<div class="save-item">
 					<p><strong><?php esc_html_e( 'Author' ); ?></strong></p>
-					<input type="text" size="30" name="publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][author]" value="<?php echo isset( $options['musite'][ $idx ]['author'] ) ? esc_html( $options['musite'][ $idx ]['author'] ) : ''; ?>" />
+					<input type="text" size="20" name="publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][author]" value="<?php echo isset( $options['musite'][ $idx ]['author'] ) ? esc_html( $options['musite'][ $idx ]['author'] ) : ''; ?>" />
 				</div>
 				<div class="save-item">
-					<p><a href="#" class="repeat"><?php esc_html_e( 'Add Another', 'publish-multisite' ); ?></a></p>
+					<a href="#" class="button alt remove"><span class="dashicons dashicons-remove"></span><?php esc_html_e( 'Remove', 'sync-ecommerce-course' ); ?></a>
 				</div>
 			</div>
 			<?php
 		}
 		?>
+		<a href="#" class="button repeat"><span class="dashicons dashicons-insert"></span><?php esc_html_e( 'Add Another', 'sync-ecommerce-course' ); ?></a>
 		<script type="text/javascript">
 		// Prepare new attributes for the repeating section
 		var attrs = ['for', 'id', 'name'];
@@ -305,6 +349,12 @@ class PUBMULT_Settings {
 			})
 		})
 		}
+
+		// Clone the previous section, and remove all of the values                  
+		jQuery('.remove').click(function(e){
+			e.preventDefault();
+			jQuery(this).parent().parent().remove();
+		});
 
 		// Clone the previous section, and remove all of the values                  
 		jQuery('.repeat').click(function(e){

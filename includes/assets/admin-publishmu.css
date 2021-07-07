@@ -1,0 +1,20 @@
+.publishmu.repeating {
+	width: 21%;
+	float: left;
+	margin-right: 10px;
+}
+.publishmu.repeating .save-item {
+	margin-right: 15px;
+}
+.publishmu.repeating .button.remove {
+	margin: 10px 5px 5px;
+}
+.publishmu.repeating .button.repeat {
+	margin-top: 25px;
+}
+
+.button.repeat .dashicons,
+.publishmu.repeating .button.remove .dashicons {
+	margin-top: 3px;
+	margin-right: 9px;
+}
