@@ -4,8 +4,8 @@ Tags: multisite, duplicate
 Donate link: 
 Requires at least: 4.0
 Tested up to: 5.8
-Stable tag: 1.0
-Version: 1.0
+Stable tag: 1.1
+Version: 1.1
 
 Duplicates a post and publish in a subsite.
 
@@ -18,7 +18,11 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Developers ==
 
 == Changelog =
-= 0.1 =
+= 1.1 =
+*	Seo tags canonical
+* 	Fix bug duplicated articles.
+
+= 1.0 =
 *	Initial release
 
 == Links ==
