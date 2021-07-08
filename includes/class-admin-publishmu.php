@@ -90,6 +90,7 @@ class PUBMULT_Publish {
 		// Copy data.
 		$original_blog_id = get_current_blog_id();
 		switch_to_blog( $site );
+		$this->log_it( 'Sourcepermalink:' . $source_permalink );
 
 		if ( ! $target_post_id ) {
 			$post_arg       = array(
@@ -132,7 +133,7 @@ class PUBMULT_Publish {
 			$upload_dir = wp_upload_dir();
 			if ( is_array( $image_url ) ) {
 				$image_url = $image_url[0];
-			} else {
+
 				$image_data = file_get_contents( $image_url ); //phpcs:ignore
 				$filename   = basename( $image_url );
 
@@ -142,39 +143,38 @@ class PUBMULT_Publish {
 				} else {
 					$file = $upload_dir['basedir'] . '/' . $filename;
 				}
+				$this->log_it( 'Image data: ' . $image_data );
 
-				if ( $image_data ) {
-					// Create the image  file on the server.
-					file_put_contents( $file, $image_data ); //phpcs:ignore
-		
-					// Check image file type.
-					$wp_filetype = wp_check_filetype( $filename, null );
-		
-					// Set attachment data.
-					$attachment = array(
-						'post_mime_type' => $wp_filetype['type'],
-						'post_title'     => sanitize_file_name( $filename ),
-						'post_content'   => '',
-						'post_status'    => 'inherit',
-					);
+				// Create the image  file on the server.
+				file_put_contents( $file, $image_data ); //phpcs:ignore
 
-					// Create the attachment.
-					$attach_id = wp_insert_attachment( $attachment, $file, $target_post_id );
+				// Check image file type.
+				$wp_filetype = wp_check_filetype( $filename, null );
 
-					// Include image.php.
-					require_once ABSPATH . 'wp-admin/includes/image.php';
+				// Set attachment data.
+				$attachment = array(
+					'post_mime_type' => $wp_filetype['type'],
+					'post_title'     => sanitize_file_name( $filename ),
+					'post_content'   => '',
+					'post_status'    => 'inherit',
+				);
 
-					// Define attachment metadata.
-					$attach_data = wp_generate_attachment_metadata( $attach_id, $file );
+				// Create the attachment.
+				$attach_id = wp_insert_attachment( $attachment, $file, $target_post_id );
 
-					// Assign metadata to attachment.
-					wp_update_attachment_metadata( $attach_id, $attach_data );
+				// Include image.php.
+				require_once ABSPATH . 'wp-admin/includes/image.php';
 
-					$this->log_it( 'attachment id:' . $attach_id );
+				// Define attachment metadata.
+				$attach_data = wp_generate_attachment_metadata( $attach_id, $file );
 
-					// And finally assign featured image to post.
-					set_post_thumbnail( $target_post_id, $attach_id );
-				}
+				// Assign metadata to attachment.
+				wp_update_attachment_metadata( $attach_id, $attach_data );
+
+				$this->log_it( 'attachment id:' . $attach_id );
+
+				// And finally assign featured image to post.
+				set_post_thumbnail( $target_post_id, $attach_id );
 			}
 		}
 
