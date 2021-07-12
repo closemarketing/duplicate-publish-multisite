@@ -246,8 +246,8 @@ class PUBMULT_Settings {
 	 * @return void
 	 */
 	public function category_publish(){
-		$site_id = isset( $_POST['site_id'] ) ? esc_html( $_POST['site_id'] ) : '';
-		$nonce   = isset( $_POST['nonce'] ) ? esc_html( $_POST['nonce'] ) : '';
+		$site_id = isset( $_POST['site_id'] ) ? sanitize_key( $_POST['site_id'] ) : '';
+		$nonce   = isset( $_POST['nonce'] ) ? sanitize_key( $_POST['nonce'] ) : '';
 		check_ajax_referer( 'category_publish_nonce', 'nonce' );
 		if ( true ) {
 			$html = '';
