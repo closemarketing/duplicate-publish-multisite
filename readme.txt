@@ -1,8 +1,7 @@
 === Duplicate Publish Multisite ===
 Contributors: closemarketing, davidperez, sacrajaimez
 Tags: multisite, duplicate
-Donate link: https://www.closemarketing.es/go/donate/
-Donate link: 
+Donate link: https://www.closemarketing.es/go/donate/ 
 Requires at least: 4.0
 Tested up to: 5.8
 Stable tag: 1.1
@@ -13,6 +12,14 @@ License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Duplicates a post and publish in a subsite.
 
 == Description ==
+
+In your WordPress multisite, with this plugin you will be allowed to sync from category of a post, to be duplicated to other site. You will have to set in source site and nothing more. 
+
+The objective of this plugin is to maintain news of subsites and keep SEO with canonical tag in duplicated entries.
+
+The settings options are in Settings / Publish Multisite.
+
+You can create every pair of category / subsite to make the duplication updated.
 
 == Installation ==
 
@@ -30,4 +37,4 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 
 == Links ==
 *	[name](link_url)
-*	[Closemarketing](https://www.closemarketing.net)
+*	[Closemarketing](https://close.marketing)
