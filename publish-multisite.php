@@ -3,7 +3,7 @@
  * Plugin Name: Publish Duplicate Post to Multisite
  * Plugin URI:  duplicate-publish-multisite
  * Description: Publish duplicated post to multisite based on category.
- * Version:     1.1
+ * Version:     1.2
  * Author:      Closemarketing
  * Author URI:  https://close.marketing
  * Text Domain: duplicate-publish-multisite
@@ -23,7 +23,7 @@
 
 defined( 'ABSPATH' ) || die( 'No script kiddies please!' );
 
-define( 'PUBLISHMU_VERSION', '1.1' );
+define( 'PUBLISHMU_VERSION', '1.2' );
 
 add_action( 'plugins_loaded', 'pubmult_plugin_init' );
 /**

@@ -4,8 +4,8 @@ Tags: multisite, duplicate
 Donate link: https://www.closemarketing.es/go/donate/ 
 Requires at least: 4.0
 Tested up to: 5.8
-Stable tag: 1.1
-Version: 1.1
+Stable tag: 1.2
+Version: 1.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,6 +28,9 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Developers ==
 
 == Changelog =
+= 1.2 =
+*	Created design graphic for the plugin.
+
 = 1.1 =
 *	Seo tags canonical
 * 	Fix bug duplicated articles.
