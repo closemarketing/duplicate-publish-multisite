@@ -3,6 +3,7 @@ jQuery(document).ready(function($) {
 		e.preventDefault();
 
 		catpub = $(this).closest('.publishmu').find('.category-publish');
+		authpub = $(this).closest('.publishmu').find('.author-publish');
 		
 		$.ajax({
 			type: 'POST',
@@ -15,7 +16,9 @@ jQuery(document).ready(function($) {
 			beforeSend: function() { $(".category-publish-action .spinner").addClass("is-active"); },
 			complete: function() { $(".category-publish-action .spinner").removeClass("is-active"); },
 			success: function(response){
-				catpub.empty().append(response.data);
+				console.log(response.data);
+				catpub.empty().append(response.data[0]);
+				authpub.empty().append(response.data[1]);
 			},
 			error: function(xhr, textStatus, error) {
 				console.log(xhr.statusText);

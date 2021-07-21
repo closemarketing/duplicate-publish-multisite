@@ -30,6 +30,8 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Changelog =
 = 1.2 =
 *	Created design graphic for the plugin.
+*	Fixed Authors for publishing.
+*	Date of duplicated post now is the same of source post.
 
 = 1.1 =
 *	Seo tags canonical

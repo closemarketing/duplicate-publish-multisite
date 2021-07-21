@@ -49,10 +49,11 @@ class PUBMULT_Publish {
 		$this->log_it( $options );
 		if ( isset( $options['musite'] ) && $options['musite'] ) {
 			foreach ( $options['musite'] as $site ) {
-				$tax         = explode( '|', $site['taxonomy'] );
-				$tax_name    = $tax[0];
-				$term_id     = $tax[1];
-				$check_terms = array( $term_id );
+				$tax           = explode( '|', $site['taxonomy'] );
+				$tax_name      = $tax[0];
+				$term_id       = $tax[1];
+				$check_terms   = array( $term_id );
+				$target_author = is_numeric( $site['author'] ) ? $site['author'] : '';
 
 				$children_terms = get_term_children( $term_id, $tax_name );
 				if ( $children_terms ) {
@@ -61,7 +62,7 @@ class PUBMULT_Publish {
 				$this->log_it( 'Terms: ' . implode( ',', $check_terms ) );
 				if ( has_term( $check_terms, $tax_name, $post->ID ) ) {
 					$target_post_id = get_post_meta( $post->ID, 'publish_mu_site_' . $site['site'], true );
-					$this->update_post( $site['site'], $post->ID, $target_post_id );
+					$this->update_post( $site['site'], $post->ID, $target_post_id, $target_author );
 				} else {
 					$this->log_it( 'Not update: ' . $post->ID . ' Site:' . $site['site'] );
 				}
@@ -77,7 +78,7 @@ class PUBMULT_Publish {
 	 * @param boolean $target_post_id Target.
 	 * @return void
 	 */
-	private function update_post( $site, $source_post_id, $target_post_id = false ) {
+	private function update_post( $site, $source_post_id, $target_post_id = false, $target_author ) {
 		// Get data to copy.
 		$source_post      = get_post( $source_post_id );
 		$source_data      = get_post_custom( $source_post_id );
@@ -98,7 +99,11 @@ class PUBMULT_Publish {
 				'post_content' => $source_post->post_content,
 				'post_status'  => $source_post->post_status,
 				'post_type'    => $source_post->post_type,
+				'post_date'    => $source_post->post_date,
 			);
+			if ( $target_author ) {
+				$post_arg['post_author'] = $target_author;
+			}
 			$target_post_id = wp_insert_post( $post_arg );
 			foreach ( $source_data as $key => $values ) {
 				foreach ( $values as $value ) {
@@ -116,7 +121,12 @@ class PUBMULT_Publish {
 				'post_content' => $source_post->post_content,
 				'post_status'  => $source_post->post_status,
 				'post_type'    => $source_post->post_type,
+				'post_date'    => $source_post->post_date,
 			);
+			if ( $target_author ) {
+				$post_arg['post_author'] = $target_author;
+			}
+
 			wp_update_post( $post_arg );
 			foreach ( $source_data as $key => $values ) {
 				foreach ( $values as $value ) {

@@ -241,6 +241,29 @@ class PUBMULT_Settings {
 	}
 
 	/**
+	 * Get authors from.
+	 *
+	 * @param integer $site Site ID.
+	 * @return array
+	 */
+	private function get_authors_from( $site = 0 ) {
+		$authors_options = array();
+		if ( 0 !== $site ) {
+			$original_blog_id = get_current_blog_id();
+			switch_to_blog( $site );
+		}
+
+		$users = get_users();
+		foreach ( $users as $user ) {
+			$authors_options[ $user->ID ] = $user->display_name;
+		}
+		if ( 0 !== $site ) {
+			switch_to_blog( $original_blog_id );
+		}
+		return $authors_options;
+	}
+
+	/**
 	 * Ajax function to load info
 	 *
 	 * @return void
@@ -250,11 +273,15 @@ class PUBMULT_Settings {
 		$nonce   = isset( $_POST['nonce'] ) ? sanitize_key( $_POST['nonce'] ) : '';
 		check_ajax_referer( 'category_publish_nonce', 'nonce' );
 		if ( true ) {
-			$html = '';
+			$html_cat = '';
 			foreach ( $this->get_categories_from( $site_id ) as $key => $value ) {
-				$html .= '<option value="' . esc_html( $key ) . '" >' . esc_html( $value ) . '</option>';
+				$html_cat .= '<option value="' . esc_html( $key ) . '" >' . esc_html( $value ) . '</option>';
 			}
-			wp_send_json_success( $html );
+			$html_auth = '';
+			foreach ( $this->get_authors_from( $site_id ) as $key => $value ) {
+				$html_auth .= '<option value="' . esc_html( $key ) . '" >' . esc_html( $value ) . '</option>';
+			}
+			wp_send_json_success( array( $html_cat, $html_auth ) );
 		} else {
 			wp_send_json_error( array( 'error' => 'Error' ) );
 		}
@@ -323,8 +350,22 @@ class PUBMULT_Settings {
 					</select>
 				</div>
 				<div class="save-item">
-					<p><strong><?php esc_html_e( 'Author' ); ?></strong></p>
-					<input type="text" size="20" name="publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][author]" value="<?php echo isset( $options['musite'][ $idx ]['author'] ) ? esc_html( $options['musite'][ $idx ]['author'] ) : ''; ?>" />
+					<p><strong><?php esc_html_e( 'Author of entries', 'duplicate-publish-multisite' ); ?></strong></p>
+					<select id="authorid-row-<?php echo esc_html( $idx ); ?>" name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][author]' class="author-publish">
+						<option value=''></option>
+						<?php
+						$site_target = isset( $options['musite'][ $idx ]['site'] ) ? $options['musite'][ $idx ]['site'] : '';
+						$auth_cat  = isset( $options['musite'][ $idx ]['author'] ) ? $options['musite'][ $idx ]['author'] : '';
+
+						$authors_target_options = $this->get_authors_from( $site_target );
+						// Load Page Options.
+						foreach ( $authors_target_options as $key => $value ) {
+							echo '<option value="' . esc_html( $key ) . '" ';
+							selected( $key, $auth_cat );
+							echo '>' . esc_html( $value ) . '</option>';
+						}
+						?>
+					</select>
 				</div>
 				<div class="save-item">
 					<a href="#" class="button alt remove"><span class="dashicons dashicons-remove"></span><?php esc_html_e( 'Remove', 'sync-ecommerce-course' ); ?></a>
