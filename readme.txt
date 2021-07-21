@@ -41,5 +41,4 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 *	Initial release
 
 == Links ==
-*	[name](link_url)
 *	[Closemarketing](https://close.marketing)
