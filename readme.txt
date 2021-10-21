@@ -28,6 +28,9 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Developers ==
 
 == Changelog =
+= 1.3 =
+*	Publish in multiple categories.
+
 = 1.2 =
 *	Created design graphic for the plugin.
 *	Fixed Authors for publishing.

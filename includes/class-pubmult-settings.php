@@ -146,16 +146,21 @@ class PUBMULT_Settings {
 	 */
 	public function sanitize_fields( $input ) {
 		$sanitary_values = array();
-
 		// Save Spider options.
 		if ( isset( $input['musite'] ) ) {
 			$index = 0;
 			foreach ( $input['musite'] as $musite ) {
 				if ( $musite['taxonomy'] ) {
-					$sanitary_values['musite'][ $index ]['taxonomy']   = sanitize_text_field( $musite['taxonomy'] );
-					$sanitary_values['musite'][ $index ]['site']       = sanitize_text_field( $musite['site'] );
-					$sanitary_values['musite'][ $index ]['author']     = sanitize_text_field( $musite['author'] );
-					$sanitary_values['musite'][ $index ]['target_cat'] = sanitize_text_field( $musite['target_cat'] );
+					$cat_string = array();
+					foreach( $musite as $key => $value ) {
+						if ( false !== strpos( $key, 'target_cat_' ) ) {
+							$cat_string[] = str_replace( 'target_cat_', '', $key );
+						} else {
+							$sanitary_values['musite'][ $index ][ $key ] = sanitize_text_field( $value );
+						}
+
+					}
+					$sanitary_values['musite'][ $index ]['target_cat'] = implode( ',', $cat_string );
 					$index++;
 				}
 			}
@@ -180,7 +185,7 @@ class PUBMULT_Settings {
 	private function get_sites_publish() {
 		$sites    = array();
 		$subsites = get_sites();
-		
+
 		foreach ( $subsites as $subsite ) {
 			$subsite_id           = (int) get_object_vars( $subsite )['blog_id'];
 			$subsite_name         = get_blog_details( $subsite_id )->blogname;
@@ -221,7 +226,6 @@ class PUBMULT_Settings {
 			);
 			$terms_array = get_terms( $args_query );
 			if ( ! empty( $terms_array)){
-				$posts_options[] = '--- ' . $taxonomy_obj->label . ' ---';
 				foreach ( $terms_array as $term ) {
 					$term_name = '';
 					if ( 0 !== $term->parent ) {
@@ -230,7 +234,7 @@ class PUBMULT_Settings {
 					}
 					$term_name .= $term->name;
 
-					$posts_options[ $taxonomy . '|' . $term->term_id ] = $term_name;
+					$posts_options[ $taxonomy . '-' . $term->term_id ] = $term_name;
 				}
 			}
 		}
@@ -268,14 +272,19 @@ class PUBMULT_Settings {
 	 *
 	 * @return void
 	 */
-	public function category_publish(){
+	public function category_publish() {
 		$site_id = isset( $_POST['site_id'] ) ? sanitize_key( $_POST['site_id'] ) : '';
+		$index   = isset( $_POST['index'] ) ? sanitize_key( $_POST['index'] ) : '';
 		$nonce   = isset( $_POST['nonce'] ) ? sanitize_key( $_POST['nonce'] ) : '';
 		check_ajax_referer( 'category_publish_nonce', 'nonce' );
 		if ( true ) {
 			$html_cat = '';
 			foreach ( $this->get_categories_from( $site_id ) as $key => $value ) {
-				$html_cat .= '<option value="' . esc_html( $key ) . '" >' . esc_html( $value ) . '</option>';
+				//$html_cat .= '<option value="' . esc_html( $key ) . '" >' . esc_html( $value ) . '</option>';
+				$html_cat .= '<p><input type="checkbox"';
+				$html_cat .= 'name="publish_mu_setttings[musite][' . esc_html( $index ) . '][target_cat_' . esc_html( $key ) . ']"';
+				$html_cat .= ' value="' . esc_html( $key ) . '"';
+				$html_cat .= '/>' . esc_html( $value ) . '</p>';
 			}
 			$html_auth = '';
 			foreach ( $this->get_authors_from( $site_id ) as $key => $value ) {
@@ -333,21 +342,30 @@ class PUBMULT_Settings {
 				</div>
 				<div class="save-item">
 					<p><strong><?php esc_html_e( 'Category to publish', 'duplicate-publish-multisite' ); ?></strong></p>
-					<select id="catid-row-<?php echo esc_html( $idx ); ?>" name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][target_cat]' class="category-publish">
-						<option value=''></option>
-						<?php
-						$site_target = isset( $options['musite'][ $idx ]['site'] ) ? $options['musite'][ $idx ]['site'] : '';
-						$target_cat  = isset( $options['musite'][ $idx ]['target_cat'] ) ? $options['musite'][ $idx ]['target_cat'] : '';
-
-						$cats_target_options = $this->get_categories_from( $site_target );
-						// Load Page Options.
-						foreach ( $cats_target_options as $key => $value ) {
-							echo '<option value="' . esc_html( $key ) . '" ';
-							selected( $key, $target_cat );
-							echo '>' . esc_html( $value ) . '</option>';
+					<?php
+					$site_target = isset( $options['musite'][ $idx ]['site'] ) ? $options['musite'][ $idx ]['site'] : '';
+					$target_cat  = isset( $options['musite'][ $idx ]['target_cat'] ) ? $options['musite'][ $idx ]['target_cat'] : '';
+					if ( strpos( $target_cat, '|' ) ) {
+						// old method.
+						$tax_string    = str_replace( '|', '-', $target_cat );
+						$terms_checked = array( $tax_string );
+					} else {
+						$terms_checked = explode( ',', $target_cat );
+					}
+					$cats_target_options = $this->get_categories_from( $site_target );
+					echo '<label class="category-publish" for="[musite][' . esc_html( $idx ) . '][label]">';
+					// Load Page Options.
+					foreach ( $cats_target_options as $key => $value ) {
+						echo '<p><input type="checkbox" id="catid-row-' . esc_html( $idx ) . '-' . esc_html( $key ) . '" ';
+						echo 'name="publish_mu_setttings[musite][' . esc_html( $idx ) . '][target_cat_' . esc_html( $key ) . ']"';
+						echo ' value="1"';
+						if ( false !== array_search( esc_html( $key ), $terms_checked ) ) {
+							echo ' checked="checked" ';
 						}
-						?>
-					</select>
+						echo '/>' . esc_html( $value ) . '</p>';
+					}
+					echo '</label>';
+					?>
 				</div>
 				<div class="save-item">
 					<p><strong><?php esc_html_e( 'Author of entries', 'duplicate-publish-multisite' ); ?></strong></p>
@@ -383,10 +401,10 @@ class PUBMULT_Settings {
 		tags.each(function() {
 			var $this = jQuery(this);
 			jQuery.each(attrs, function(i, attr) {
-			var attr_val = $this.attr(attr);
-			if (attr_val) {
-				$this.attr(attr, attr_val.replace(/\[musite\]\[\d+\]\[/, '\[musite\]\['+(idx + 1)+'\]\['))
-			}
+				var attr_val = $this.attr(attr);
+				if (attr_val) {
+					$this.attr(attr, attr_val.replace(/\[musite\]\[\d+\]\[/, '\[musite\]\['+(idx + 1)+'\]\['))
+				}
 			})
 		})
 		}

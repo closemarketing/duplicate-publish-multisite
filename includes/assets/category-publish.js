@@ -4,13 +4,15 @@ jQuery(document).ready(function($) {
 
 		catpub = $(this).closest('.publishmu').find('.category-publish');
 		authpub = $(this).closest('.publishmu').find('.author-publish');
-		
+		strindex = $(this).closest('.publishmu').find('.category-publish').attr('for').replaceAll('][',',').replace('[','').replace(']','').split(',');
+
 		$.ajax({
 			type: 'POST',
 			url: ajaxAction.url,
 			data: {
 				action: 'category_publish',
 				site_id: $(this).val(),
+				index: strindex[1],
 				nonce: ajaxAction.nonce
 			},
 			beforeSend: function() { $(".category-publish-action .spinner").addClass("is-active"); },
