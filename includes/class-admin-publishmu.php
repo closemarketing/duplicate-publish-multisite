@@ -49,9 +49,12 @@ class PUBMULT_Publish {
 		$this->log_it( $options );
 		if ( isset( $options['musite'] ) && $options['musite'] ) {
 			foreach ( $options['musite'] as $site ) {
-				$tax           = explode( '|', $site['taxonomy'] );
-				$tax_name      = $tax[0];
-				$term_id       = $tax[1];
+				$sep         = strpos( $site['taxonomy'], '|' ) ? '|' : '-';
+				$tax         = explode( $sep, $site['taxonomy'] );
+				$tax_name    = $tax[0];
+				$term_id     = $tax[1];
+				$target_cats = explode( ',', $site['target_cat'] );
+
 				$check_terms   = array( $term_id );
 				$target_author = is_numeric( $site['author'] ) ? $site['author'] : '';
 
@@ -62,7 +65,7 @@ class PUBMULT_Publish {
 				$this->log_it( 'Terms: ' . implode( ',', $check_terms ) );
 				if ( has_term( $check_terms, $tax_name, $post->ID ) ) {
 					$target_post_id = get_post_meta( $post->ID, 'publish_mu_site_' . $site['site'], true );
-					$this->update_post( $site['site'], $post->ID, $target_post_id, $target_author );
+					$this->update_post( $site['site'], $post->ID, $target_post_id, $target_author, $target_cats );
 				} else {
 					$this->log_it( 'Not update: ' . $post->ID . ' Site:' . $site['site'] );
 				}
@@ -76,9 +79,11 @@ class PUBMULT_Publish {
 	 * @param int     $site Site origin.
 	 * @param int     $source_post_id Post id origin.
 	 * @param boolean $target_post_id Target.
+	 * @param int     $target_author Target author.
+	 * @param array   $target_cats Cats to target.
 	 * @return void
 	 */
-	private function update_post( $site, $source_post_id, $target_post_id = false, $target_author ) {
+	private function update_post( $site, $source_post_id, $target_post_id = false, $target_author, $target_cats ) {
 		// Get data to copy.
 		$source_post      = get_post( $source_post_id );
 		$source_data      = get_post_custom( $source_post_id );
@@ -137,6 +142,29 @@ class PUBMULT_Publish {
 			}
 			$this->log_it( 'Update post: ' . $target_post_id . ' Site:' . $site );
 		}
+		/**
+		 * ## Terms
+		 * --------------------------- */
+		$this->log_it( 'has terms:' . implode( ',', $target_cats ) );
+		$cats_id = array();
+		foreach ( $target_cats as $target_cat ) {
+			if ( strpos( $target_cat, '-' ) ) {
+				$term_cat      = explode( '-', $target_cat );
+				$term_cat_name = $term_cat[0];
+				$cats_id[]     = $term_cat[1];
+			}
+		}
+		if ( ! empty( $cats_id ) ) {
+			wp_set_post_terms(
+				$target_post_id,
+				$cats_id,
+				$term_cat_name
+			);
+		}
+
+		/**
+		 * ## Thumbnail
+		 * --------------------------- */
 		$this->log_it( 'has thumb Target_post_id:' . has_post_thumbnail( $target_post_id ) );
 		if ( ! has_post_thumbnail( $target_post_id ) ) {
 			// Add Featured Image to Post.
