@@ -241,6 +241,7 @@ class PUBMULT_Settings {
 		if ( 0 !== $site ) {
 			switch_to_blog( $original_blog_id );
 		}
+		asort( $posts_options );
 		return $posts_options;
 	}
 
@@ -264,6 +265,7 @@ class PUBMULT_Settings {
 		if ( 0 !== $site ) {
 			switch_to_blog( $original_blog_id );
 		}
+		asort( $authors_options );
 		return $authors_options;
 	}
 
