@@ -3,7 +3,7 @@ Contributors: closemarketing, davidperez, sacrajaimez
 Tags: multisite, duplicate
 Donate link: https://www.closemarketing.es/go/donate/ 
 Requires at least: 4.0
-Tested up to: 5.8
+Tested up to: 5.8.1
 Stable tag: 1.3
 Version: 1.3
 License: GPLv2 or later
@@ -30,6 +30,7 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Changelog =
 = 1.3 =
 *	Publish with multiple categories.
+*     Fix not taking categories to publish.
 
 = 1.2 =
 *	Created design graphic for the plugin.
