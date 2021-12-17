@@ -3,9 +3,9 @@ Contributors: closemarketing, davidperez, sacrajaimez
 Tags: multisite, duplicate
 Donate link: https://www.closemarketing.es/go/donate/ 
 Requires at least: 4.0
-Tested up to: 5.8.1
-Stable tag: 1.3
-Version: 1.3
+Tested up to: 5.9
+Stable tag: 1.4
+Version: 1.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,9 +28,12 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Developers ==
 
 == Changelog =
+= 1.4 =
+*	Sync older posts.
+
 = 1.3 =
 *	Publish with multiple categories.
-*     Fix not taking categories to publish.
+*  Fix not taking categories to publish.
 
 = 1.2 =
 *	Created design graphic for the plugin.

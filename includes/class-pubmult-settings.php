@@ -388,13 +388,19 @@ class PUBMULT_Settings {
 					</select>
 				</div>
 				<div class="save-item">
-					<a href="#" class="button alt remove"><span class="dashicons dashicons-remove"></span><?php esc_html_e( 'Remove', 'sync-ecommerce-course' ); ?></a>
+					<a href="#" class="button alt remove"><span class="dashicons dashicons-remove"></span><?php esc_html_e( 'Remove', 'duplicate-publish-multisite' ); ?></a>
+
+					<div class="sync-all-entries-action">
+						<input id="sync_all_entries" name="sync_all_entries" type="button" class="button button-large button-primary dashicons-update-alt" value="<?php esc_html_e( 'Sync all entries', 'duplicate-publish-multisite' ); ?>" data-post-id="<?php echo get_the_ID(); ?>" />
+						<span class="spinner"></span>
+						<div id="sync-all-entries-result"></div>
+					</div>
 				</div>
 			</div>
 			<?php
 		}
 		?>
-		<a href="#" class="button repeat"><span class="dashicons dashicons-insert"></span><?php esc_html_e( 'Add Another', 'sync-ecommerce-course' ); ?></a>
+		<a href="#" class="button repeat"><span class="dashicons dashicons-insert"></span><?php esc_html_e( 'Add Another', 'duplicate-publish-multisite' ); ?></a>
 		<script type="text/javascript">
 		// Prepare new attributes for the repeating section
 		var attrs = ['for', 'id', 'name'];

@@ -26,6 +26,10 @@ class PUBMULT_Publish {
 
 		// Publish to other site.
 		add_action( 'save_post_post', array( $this, 'publish_other_site' ), 10, 3 );
+
+		add_action( 'admin_enqueue_scripts', array( $this, 'scripts_sync_all_entries' ) );
+		add_action( 'wp_ajax_sync_all_entries', array( $this, 'sync_all_entries' ) );
+		add_action( 'wp_ajax_nopriv_sync_all_entries', array( $this, 'sync_all_entries' ) );
 	}
 
 	/**
@@ -257,6 +261,46 @@ class PUBMULT_Publish {
 			} else {
 				error_log( 'Publish MU: ' . $message ); //phpcs:ignore
 			}
+		}
+	}
+	/**
+	 * # AJAX Sync
+	 * ---------------------------------------------------------------------------------------------------- */
+	
+	
+	public function scripts_sync_all_entries() {
+	
+		wp_enqueue_script( 
+			'sync-all-entries',
+			plugins_url( '/assets/sync-all-entries.js', __FILE__ ),
+			array( 'jquery' ),
+			true
+		);
+	
+		wp_localize_script(
+			'sync-all-entries',
+			'ajaxSyncEntries',
+			array(
+				'url'   => admin_url( 'admin-ajax.php' ),
+				'nonce' => wp_create_nonce( 'sync_all_entries_nonce' ),
+			)
+		);
+	}
+	/**
+	 * Ajax function to load info
+	 *
+	 * @return void
+	 */
+	public function sync_all_entries() {
+		$nonce = isset( $_POST['nonce'] ) ? esc_attr( $_POST['nonce'] ) : '';
+	
+		check_ajax_referer( 'sync_all_entries_nonce', 'nonce' );
+		if ( true ) {
+			$html = '';
+
+			wp_send_json_success( $html );
+		} else {
+			wp_send_json_error( array( 'error' => 'Error' ) );
 		}
 	}
 }
