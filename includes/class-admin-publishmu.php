@@ -88,7 +88,7 @@ class PUBMULT_Publish {
 	 * @param array   $target_cats Cats to target.
 	 * @return void
 	 */
-	private function update_post( $site, $source_post_id, $target_post_id = false, $target_author, $target_cats ) {
+	private function update_post( $site, $source_post_id, $target_post_id = false, $target_author = 0, $target_cats = array() ) {
 		// Get data to copy.
 		$source_post      = get_post( $source_post_id );
 		$source_data      = get_post_custom( $source_post_id );
@@ -270,14 +270,14 @@ class PUBMULT_Publish {
 	
 	
 	public function scripts_sync_all_entries() {
-	
+
 		wp_enqueue_script( 
 			'sync-all-entries',
 			plugins_url( '/assets/sync-all-entries.js', __FILE__ ),
 			array( 'jquery' ),
-			true
+			PUBLISHMU_VERSION
 		);
-	
+
 		wp_localize_script(
 			'sync-all-entries',
 			'ajaxSyncEntries',
