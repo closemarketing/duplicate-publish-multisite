@@ -342,7 +342,7 @@ class PUBMULT_Settings {
 						?>
 					</select>
 				</div>
-				<div class="save-item">
+				<div class="save-item options-select">
 					<p><strong><?php esc_html_e( 'Category to publish', 'duplicate-publish-multisite' ); ?></strong></p>
 					<?php
 					$site_target = isset( $options['musite'][ $idx ]['site'] ) ? $options['musite'][ $idx ]['site'] : '';
@@ -357,16 +357,33 @@ class PUBMULT_Settings {
 					$cats_target_options = $this->get_categories_from( $site_target );
 					echo '<label class="category-publish" for="[musite][' . esc_html( $idx ) . '][label]">';
 					// Load Page Options.
+					echo '<div class="options">';
+					$ord_cats_target = array();
 					foreach ( $cats_target_options as $key => $value ) {
-						echo '<p><input type="checkbox" id="catid-row-' . esc_html( $idx ) . '-' . esc_html( $key ) . '" ';
-						echo 'name="publish_mu_setttings[musite][' . esc_html( $idx ) . '][target_cat_' . esc_html( $key ) . ']"';
-						echo ' value="1"';
 						if ( false !== array_search( esc_html( $key ), $terms_checked ) ) {
+							$selected = 1;
+						} else {
+							$selected = 0;
+						}
+						$ord_cats_target[] = array(
+							'key'      => $key,
+							'value'    => $value,
+							'selected' => $selected,
+						);
+					}
+					$keys = array_column( $ord_cats_target, 'selected' );
+					array_multisort( $keys, SORT_DESC, $ord_cats_target );
+
+					foreach ( $ord_cats_target as $cat ) {
+						echo '<p><input type="checkbox" id="catid-row-' . esc_html( $idx ) . '-' . esc_html( $cat['key'] ) . '" ';
+						echo 'name="publish_mu_setttings[musite][' . esc_html( $idx ) . '][target_cat_' . esc_html( $cat['key'] ) . ']"';
+						echo ' value="1"';
+						if ( $cat['selected'] ) {
 							echo ' checked="checked" ';
 						}
-						echo '/>' . esc_html( $value ) . '</p>';
+						echo '/>' . esc_html( $cat['value'] ) . '</p>';
 					}
-					echo '</label>';
+					echo '</div></label>';
 					?>
 				</div>
 				<div class="save-item">
@@ -390,11 +407,9 @@ class PUBMULT_Settings {
 				<div class="save-item">
 					<a href="#" class="button alt remove"><span class="dashicons dashicons-remove"></span><?php esc_html_e( 'Remove', 'duplicate-publish-multisite' ); ?></a>
 
-					<div class="sync-all-entries-action">
-						<input name="sync_all_entries" type="button" class="sync-all-entries button button-large button-primary dashicons-update-alt" value="<?php esc_html_e( 'Sync all entries', 'duplicate-publish-multisite' ); ?>" data-post-id="<?php echo get_the_ID(); ?>" />
-						<span class="spinner"></span>
-						<div class="sync-all-entries-result"></div>
-					</div>
+					<a href="#" class="button sync-all-entries"><span class="dashicons dashicons-image-rotate"></span><?php esc_html_e( 'Sync all entries', 'duplicate-publish-multisite' ); ?></a>
+					<div class="sync-all-entries-result"></div>
+
 				</div>
 			</div>
 			<?php

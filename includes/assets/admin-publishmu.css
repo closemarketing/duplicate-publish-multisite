@@ -10,17 +10,31 @@
 .publishmu.repeating input {
 	max-width: 100%;
 }
-.publishmu.repeating .button.remove {
+.publishmu.repeating .button {
 	margin: 10px 5px 5px;
 }
-.publishmu.repeating .button.repeat {
+.publishmu.repeating .button {
 	margin-top: 25px;
+}
+
+.publishmu.repeating .button.sync-all-entries span {
+	padding-top: 4px;
+	padding-right: 5px;
 }
 
 .button.repeat .dashicons,
 .publishmu.repeating .button.remove .dashicons {
 	margin-top: 3px;
 	margin-right: 9px;
+}
+
+.publishmu .options-select .category-publish .options {
+	min-height: 150px;
+	max-height: 150px;
+	overflow: auto;
+	padding: 0 0.9em;
+	border: solid 1px #dcdcde;
+	background-color: #fff;
 }
 
 /* Tablet vertical */

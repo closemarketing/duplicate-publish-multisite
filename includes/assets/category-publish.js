@@ -2,7 +2,7 @@ jQuery(document).ready(function($) {
 	$('.site-publish').change(function(e) {
 		e.preventDefault();
 
-		catpub = $(this).closest('.publishmu').find('.category-publish');
+		catpub = $(this).closest('.publishmu').find('.category-publish .options');
 		authpub = $(this).closest('.publishmu').find('.author-publish');
 		strindex = $(this).closest('.publishmu').find('.category-publish').attr('for').replaceAll('][',',').replace('[','').replace(']','').split(',');
 
