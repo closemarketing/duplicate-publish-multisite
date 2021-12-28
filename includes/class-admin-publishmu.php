@@ -267,8 +267,7 @@ class PUBMULT_Publish {
 	/**
 	 * # AJAX Sync
 	 * ---------------------------------------------------------------------------------------------------- */
-	
-	
+
 	public function scripts_sync_all_entries() {
 
 		wp_enqueue_script( 
