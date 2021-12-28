@@ -22,3 +22,10 @@
 	margin-top: 3px;
 	margin-right: 9px;
 }
+
+/* Tablet vertical */
+@media only screen and (max-width: 860px) {
+	.publishmu.repeating {
+		width: 44%;
+	}
+}

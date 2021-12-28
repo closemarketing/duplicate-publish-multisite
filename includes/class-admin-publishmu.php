@@ -19,6 +19,7 @@ defined( 'ABSPATH' ) || exit;
  */
 class PUBMULT_Publish {
 
+	private $entries;
 	/**
 	 * Construct of Class
 	 */
@@ -292,15 +293,117 @@ class PUBMULT_Publish {
 	 * @return void
 	 */
 	public function sync_all_entries() {
-		$nonce = isset( $_POST['nonce'] ) ? esc_attr( $_POST['nonce'] ) : '';
-	
-		check_ajax_referer( 'sync_all_entries_nonce', 'nonce' );
-		if ( true ) {
-			$html = '';
+		$doing_ajax   = defined( 'DOING_AJAX' ) && DOING_AJAX;
+		$not_sapi_cli = substr( php_sapi_name(), 0, 3 ) != 'cli' ? true : false;
+		$nonce        = isset( $_POST['nonce'] ) ? esc_attr( $_POST['nonce'] ) : '';
 
-			wp_send_json_success( $html );
+		// Variables of loop.
+		$source_cat_id    = isset( $_POST['source_cat_id'] ) ? substr( esc_attr( $_POST['source_cat_id'] ), 9 ) : '';
+		$target_site_id   = isset( $_POST['target_site_id'] ) ? esc_attr( $_POST['target_site_id'] ) : '';
+		$target_cat_id    = isset( $_POST['target_cat_id'] ) ? esc_attr( $_POST['target_cat_id'] ) : '';
+		$target_author_id = isset( $_POST['target_author_id'] ) ? esc_attr( $_POST['target_author_id'] ) : '';
+		$sync_loop        = isset( $_POST['sync_loop'] ) ? esc_attr( $_POST['sync_loop'] ) : 0;
+
+		if ( isset( $_POST['target_cats_id'] ) ) {
+			foreach ( $_POST['target_cats_id'] as $target_cat ){
+				$posstr = strpos( esc_attr( $target_cat ), 'target_cat_category-' );
+				if ( false !== $posstr ) {
+					$string_cat = substr( $target_cat, $posstr + 20 );
+					$target_cats[] = substr( $string_cat, 0, -1 );
+				}
+			}
+		}
+
+		check_ajax_referer( 'sync_all_entries_nonce', 'nonce' );
+		// Start.
+		if ( ! isset( $this->entries ) ) {
+			$args_posts = array(
+				'post_type'   => 'post',
+				'numberposts' => -1,
+				'orderby'     => 'date',
+				'order'       => 'ASC',
+				'fields'      => 'ids',
+				'category'    => $source_cat_id,
+			);
+
+			$this->entries[ $source_cat_id ] = get_posts( $args_posts );
+		}
+
+		if ( false === $this->entries ) {
+			if ( $doing_ajax ) {
+				wp_send_json_error( array( 'msg' => 'Error' ) );
+			} else {
+				die();
+			}
 		} else {
-			wp_send_json_error( array( 'error' => 'Error' ) );
+			$entries_count            = count( $this->entries[ $source_cat_id ] );
+			$item_id                  = $this->entries[ $source_cat_id ][ $sync_loop ];
+			$error_products_html      = '';
+			$this->msg_error_products = array();
+
+			if ( $entries_count ) {
+				if ( ( $doing_ajax ) || $not_sapi_cli ) {
+					$count = $sync_loop + 1;
+				}
+				if ( $sync_loop > $entries_count ) {
+					if ( $doing_ajax ) {
+						wp_send_json_error(
+							array(
+								'msg' => __( 'No entries to sync', 'duplicate-publish-multisite' ),
+							)
+						);
+					} else {
+						die( esc_html( __( 'No entries to sync', 'duplicate-publish-multisite' ) ) );
+					}
+				} else {
+					$target_post_id = get_post_meta( $item_id, 'publish_mu_site_' . $target_site_id, true );
+					$this->update_post( $target_site_id, $item_id, $target_post_id, $target_author_id, $target_cats );
+				}
+
+				if ( $doing_ajax || $not_sapi_cli ) {
+					$entries_synced = $sync_loop + 1;
+
+					if ( $entries_synced <= $entries_count ) {
+						$this->ajax_msg = $entries_synced . '/' . $entries_count . ' ';
+
+						if ( $entries_synced == $entries_count ) {
+							$this->ajax_msg .= __( 'Done!', 'duplicate-publish-multisite' );
+						} else {
+							$this->ajax_msg .= __( 'Entries', 'duplicate-publish-multisite' );
+						}
+
+						$args = array(
+							'msg'   => $this->ajax_msg,
+							'count' => $entries_count,
+						);
+						if ( $doing_ajax ) {
+							if ( $entries_synced < $entries_count ) {
+								$args['loop']  = $sync_loop + 1;
+							}
+							wp_send_json_success( $args );
+						} elseif ( $not_sapi_cli && $entries_synced < $entries_count ) {
+							$url  = home_url() . '/?sync=true';
+							$url .= '&sync_loop=' . ( $sync_loop + 1 );
+							?>
+							<script>
+								window.location.href = '<?php echo esc_url( $url ); ?>';
+							</script>
+							<?php
+							echo esc_html( $args['msg'] );
+							die( 0 );
+						}
+					}
+				}
+			} else {
+				if ( $doing_ajax ) {
+					wp_send_json_error( array( 'msg' => __( 'No posts to import', 'duplicate-publish-multisite' ) ) );
+				} else {
+					die( esc_html( __( 'No posts to import', 'duplicate-publish-multisite' ) ) );
+				}
+			}
+		}
+		if ( $doing_ajax ) {
+			wp_die();
 		}
 	}
 }
