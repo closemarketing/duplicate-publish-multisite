@@ -30,6 +30,7 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Changelog =
 = 1.4 =
 *	Sync older posts.
+*  Better UI for categories.
 
 = 1.3 =
 *	Publish with multiple categories.

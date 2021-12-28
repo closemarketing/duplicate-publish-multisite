@@ -70,7 +70,7 @@ class PUBMULT_Settings {
 			'category-publish',
 			plugins_url( '/assets/category-publish.js', __FILE__ ),
 			array( 'jquery' ),
-			true
+			PUBLISHMU_VERSION
 		);
 
 		wp_localize_script(
