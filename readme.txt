@@ -1,15 +1,15 @@
 === Duplicate Publish Multisite ===
 Contributors: closemarketing, davidperez, sacrajaimez
-Tags: multisite, duplicate
-Donate link: https://www.closemarketing.es/go/donate/ 
+Tags: multisite, duplicate, sync posts
+Donate link: https://close.marketing/go/donate/ 
 Requires at least: 4.0
 Tested up to: 5.9
-Stable tag: 1.4
-Version: 1.4
+Stable tag: 1.5
+Version: 1.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Duplicates a post and publish in a subsite.
+Duplicates a post and publish in a subsite from multisite. Syncs Posts from Categories between sites.
 
 == Description ==
 
@@ -28,6 +28,10 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Developers ==
 
 == Changelog =
+= 1.5 =
+*	Option SEO Canonical optional.
+*  Option autodetect Author.
+
 = 1.4 =
 *	Sync older posts.
 *  Better UI for categories.
