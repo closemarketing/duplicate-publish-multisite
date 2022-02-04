@@ -315,9 +315,11 @@ class PUBMULT_Settings {
 				<div class="save-item">
 					<p><strong><?php esc_html_e( 'Category from load', 'duplicate-publish-multisite' ); ?></strong></p>
 					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][taxonomy]' class="source-category">
-						<option value=''></option>
 						<?php
 						$taxonomy = isset( $options['musite'][ $idx ]['taxonomy'] ) ? $options['musite'][ $idx ]['taxonomy'] : '';
+						?>
+						<option value='all'<?php selected( 'all', $taxonomy ); ?>><?php esc_html_e( 'All categories', 'duplicate-publish-multisite' ); ?></option>
+						<?php
 						// Load Page Options.
 						foreach ( $posts_options as $key => $value ) {
 							echo '<option value="' . esc_html( $key ) . '" ';
@@ -389,7 +391,7 @@ class PUBMULT_Settings {
 				<div class="save-item">
 					<p><strong><?php esc_html_e( 'Author of entries', 'duplicate-publish-multisite' ); ?></strong></p>
 					<select id="authorid-row-<?php echo esc_html( $idx ); ?>" name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][author]' class="author-publish">
-						<option value=''></option>
+						<option value='any'<?php selected( 'any', $taxonomy ); ?>><?php esc_html_e( 'Autodetect', 'duplicate-publish-multisite' ); ?></option>
 						<?php
 						$site_target = isset( $options['musite'][ $idx ]['site'] ) ? $options['musite'][ $idx ]['site'] : '';
 						$auth_cat  = isset( $options['musite'][ $idx ]['author'] ) ? $options['musite'][ $idx ]['author'] : '';

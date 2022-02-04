@@ -29,6 +29,10 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 
 == Changelog =
 = 1.4 =
+*	Option to Get all categories.
+*  Option to not use author.
+
+= 1.4 =
 *	Sync older posts.
 *  Better UI for categories.
 

@@ -55,24 +55,31 @@ class PUBMULT_Publish {
 		if ( isset( $options['musite'] ) && $options['musite'] ) {
 			foreach ( $options['musite'] as $site ) {
 				$sep         = strpos( $site['taxonomy'], '|' ) ? '|' : '-';
-				$tax         = explode( $sep, $site['taxonomy'] );
-				$tax_name    = $tax[0];
-				$term_id     = $tax[1];
 				$target_cats = explode( ',', $site['target_cat'] );
 
-				$check_terms   = array( $term_id );
-				$target_author = is_numeric( $site['author'] ) ? $site['author'] : '';
+				if ( 'all' !== $site['taxonomy'] ) {
+					$tax         = explode( $sep, $site['taxonomy'] );
+					$tax_name    = $tax[0];
+					$term_id     = $tax[1];
 
-				$children_terms = get_term_children( $term_id, $tax_name );
-				if ( $children_terms ) {
-					$check_terms = array_merge( $children_terms, $check_terms );
-				}
-				$this->log_it( 'Terms: ' . implode( ',', $check_terms ) );
-				if ( has_term( $check_terms, $tax_name, $post->ID ) ) {
+					$check_terms   = array( $term_id );
+					$target_author = is_numeric( $site['author'] ) ? $site['author'] : '';
+
+					$children_terms = get_term_children( $term_id, $tax_name );
+					if ( $children_terms ) {
+						$check_terms = array_merge( $children_terms, $check_terms );
+					}
+					$this->log_it( 'Terms: ' . implode( ',', $check_terms ) );
+					if ( has_term( $check_terms, $tax_name, $post->ID ) ) {
+						$target_post_id = get_post_meta( $post->ID, 'publish_mu_site_' . $site['site'], true );
+						$this->update_post( $site['site'], $post->ID, $target_post_id, $target_author, $target_cats );
+					} else {
+						$this->log_it( 'Not update: ' . $post->ID . ' Site:' . $site['site'] );
+					}
+				} else {
+					// All Categories.
 					$target_post_id = get_post_meta( $post->ID, 'publish_mu_site_' . $site['site'], true );
 					$this->update_post( $site['site'], $post->ID, $target_post_id, $target_author, $target_cats );
-				} else {
-					$this->log_it( 'Not update: ' . $post->ID . ' Site:' . $site['site'] );
 				}
 			}
 		}
