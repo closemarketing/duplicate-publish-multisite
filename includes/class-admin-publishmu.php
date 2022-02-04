@@ -24,7 +24,7 @@ class PUBMULT_Publish {
 	 * Construct of Class
 	 */
 	public function __construct() {
-
+		$this->options = get_option( 'publish_mu_setttings' );
 		// Publish to other site.
 		add_action( 'save_post_post', array( $this, 'publish_other_site' ), 10, 3 );
 
@@ -45,15 +45,14 @@ class PUBMULT_Publish {
 	 * @return void
 	 */
 	public function publish_other_site( $post_id, $post, $update ) {
-		$options = get_option( 'publish_mu_setttings' );
 
 		// Only set for post_type = post! or isset options.
-		if ( 'post' !== $post->post_type && ! isset( $options['musite'] ) ) {
+		if ( 'post' !== $post->post_type && ! isset( $this->options['musite'] ) ) {
 			return;
 		}
-		$this->log_it( $options );
-		if ( isset( $options['musite'] ) && $options['musite'] ) {
-			foreach ( $options['musite'] as $site ) {
+		$this->log_it( $this->options );
+		if ( isset( $this->options['musite'] ) && $this->options['musite'] ) {
+			foreach ( $this->options['musite'] as $site ) {
 				$sep         = strpos( $site['taxonomy'], '|' ) ? '|' : '-';
 				$tax         = explode( $sep, $site['taxonomy'] );
 				$tax_name    = $tax[0];
@@ -222,7 +221,9 @@ class PUBMULT_Publish {
 		}
 
 		// Adds canonical SEO.
-		$this->adds_seo_tags( $source_permalink, $target_post_id );
+		if ( ! isset( $this->options['seo_canonical'] ) || '' === $this->options['seo_canonical'] || 'yes' === $this->options['seo_canonical'] ) {
+			$this->adds_seo_tags( $source_permalink, $target_post_id );
+		}
 
 		switch_to_blog( $original_blog_id );
 

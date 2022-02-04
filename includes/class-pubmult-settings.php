@@ -129,6 +129,14 @@ class PUBMULT_Settings {
 		);
 
 		add_settings_field(
+			'seo_canonical',
+			__( 'Add Post SEO Canonical to duplicated post?', 'duplicate-publish-multisite' ),
+			array( $this, 'seo_canonical_callback' ),
+			'pubmult-admin',
+			'pubmult_setting_section'
+		);
+
+		add_settings_field(
 			'musite',
 			__( 'Site relations', 'duplicate-publish-multisite' ),
 			array( $this, 'musite_callback' ),
@@ -165,6 +173,9 @@ class PUBMULT_Settings {
 				}
 			}
 		}
+		if ( isset( $input['seo_canonical'] ) ) {
+			$sanitary_values['seo_canonical'] = sanitize_text_field( $input['seo_canonical'] );
+		}
 		return $sanitary_values;
 	}
 
@@ -177,6 +188,17 @@ class PUBMULT_Settings {
 		esc_html_e( 'Make the relations between sites and categories.', 'duplicate-publish-multisite' );
 	}
 
+	public function seo_canonical_callback() {
+		?>
+		<select name="publish_mu_setttings[seo_canonical]" id="seo_canonical">
+			<?php $selected = ( isset( $this->publish_mu_setttings['seo_canonical'] ) && $this->publish_mu_setttings['seo_canonical'] === 'yes' ) ? 'selected' : ''; ?>
+			<option value="yes" <?php echo esc_html( $selected ); ?>><?php esc_html_e( 'Yes', 'import-holded-products-woocommerce' ); ?></option>
+			<?php $selected = ( isset( $this->publish_mu_setttings['seo_canonical'] ) && $this->publish_mu_setttings['seo_canonical'] === 'no' ) ? 'selected' : ''; ?>
+			<option value="no" <?php echo esc_html( $selected ); ?>><?php esc_html_e( 'No', 'import-holded-products-woocommerce' ); ?></option>
+		</select>
+		<?php
+	}
+
 	/**
 	 * Get list to sites publish
 	 *
@@ -187,10 +209,10 @@ class PUBMULT_Settings {
 		$subsites = get_sites();
 
 		foreach ( $subsites as $subsite ) {
-			$subsite_id           = (int) get_object_vars( $subsite )['blog_id'];
-			$subsite_name         = get_blog_details( $subsite_id )->blogname;
+			$subsite_id   = (int) get_object_vars( $subsite )['blog_id'];
+			$subsite_name = get_blog_details( $subsite_id )->blogname;
 
-			if (  get_current_blog_id() !== $subsite_id ) {
+			if ( get_current_blog_id() !== $subsite_id ) {
 				$sites[ $subsite_id ] = $subsite_name;
 			}
 		}
@@ -304,10 +326,9 @@ class PUBMULT_Settings {
 	 * @return void
 	 */
 	public function musite_callback() {
-		$options       = get_option( 'publish_mu_setttings' );
 		$sites_options = $this->get_sites_publish();
 		$posts_options = $this->get_categories_from();
-		$size          = isset( $options['musite'] ) ? count( $options['musite'] ) -1 : 0;
+		$size          = isset( $this->publish_mu_setttings['musite'] ) ? count( $this->publish_mu_setttings['musite'] ) -1 : 0;
 
 		for ( $idx = 0, $size; $idx <= $size; ++$idx ) {
 			?>
@@ -317,7 +338,7 @@ class PUBMULT_Settings {
 					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][taxonomy]' class="source-category">
 						<option value=''></option>
 						<?php
-						$taxonomy = isset( $options['musite'][ $idx ]['taxonomy'] ) ? $options['musite'][ $idx ]['taxonomy'] : '';
+						$taxonomy = isset( $this->publish_mu_setttings['musite'][ $idx ]['taxonomy'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['taxonomy'] : '';
 						// Load Page Options.
 						foreach ( $posts_options as $key => $value ) {
 							echo '<option value="' . esc_html( $key ) . '" ';
@@ -332,7 +353,7 @@ class PUBMULT_Settings {
 					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][site]' class="site-publish" data-row="<?php echo esc_html( $idx ); ?>">
 						<option value=''></option>
 						<?php
-						$site = isset( $options['musite'][ $idx ]['site'] ) ? $options['musite'][ $idx ]['site'] : '';
+						$site = isset( $this->publish_mu_setttings['musite'][ $idx ]['site'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['site'] : '';
 						// Load Page Options.
 						foreach ( $sites_options as $key => $value ) {
 							echo '<option value="' . esc_html( $key ) . '" ';
@@ -345,8 +366,8 @@ class PUBMULT_Settings {
 				<div class="save-item options-select">
 					<p><strong><?php esc_html_e( 'Category to publish', 'duplicate-publish-multisite' ); ?></strong></p>
 					<?php
-					$site_target = isset( $options['musite'][ $idx ]['site'] ) ? $options['musite'][ $idx ]['site'] : '';
-					$target_cat  = isset( $options['musite'][ $idx ]['target_cat'] ) ? $options['musite'][ $idx ]['target_cat'] : '';
+					$site_target = isset( $this->publish_mu_setttings['musite'][ $idx ]['site'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['site'] : '';
+					$target_cat  = isset( $this->publish_mu_setttings['musite'][ $idx ]['target_cat'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['target_cat'] : '';
 					if ( strpos( $target_cat, '|' ) ) {
 						// old method.
 						$tax_string    = str_replace( '|', '-', $target_cat );
@@ -391,8 +412,8 @@ class PUBMULT_Settings {
 					<select id="authorid-row-<?php echo esc_html( $idx ); ?>" name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][author]' class="author-publish">
 						<option value=''></option>
 						<?php
-						$site_target = isset( $options['musite'][ $idx ]['site'] ) ? $options['musite'][ $idx ]['site'] : '';
-						$auth_cat  = isset( $options['musite'][ $idx ]['author'] ) ? $options['musite'][ $idx ]['author'] : '';
+						$site_target = isset( $this->publish_mu_setttings['musite'][ $idx ]['site'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['site'] : '';
+						$auth_cat  = isset( $this->publish_mu_setttings['musite'][ $idx ]['author'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['author'] : '';
 
 						$authors_target_options = $this->get_authors_from( $site_target );
 						// Load Page Options.

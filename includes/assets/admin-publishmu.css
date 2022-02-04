@@ -14,7 +14,12 @@
 	margin: 10px 5px 5px;
 }
 .publishmu.repeating .button {
-	margin-top: 25px;
+	margin-top: 10px;
+	margin-left: 0;
+}
+
+.publishmu.repeating .button.sync-all-entries {
+	margin-top: 5px;
 }
 
 .publishmu.repeating .button.sync-all-entries span {
