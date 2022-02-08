@@ -288,6 +288,8 @@ class PUBMULT_Settings {
 			switch_to_blog( $original_blog_id );
 		}
 		asort( $authors_options );
+		$authors_options = array( 'any' => esc_html__( 'Autodetect', 'duplicate-publish-multisite' ) ) + $authors_options;
+
 		return $authors_options;
 	}
 
@@ -410,7 +412,6 @@ class PUBMULT_Settings {
 				<div class="save-item">
 					<p><strong><?php esc_html_e( 'Author of entries', 'duplicate-publish-multisite' ); ?></strong></p>
 					<select id="authorid-row-<?php echo esc_html( $idx ); ?>" name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][author]' class="author-publish">
-						<option value=''></option>
 						<?php
 						$site_target = isset( $this->publish_mu_setttings['musite'][ $idx ]['site'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['site'] : '';
 						$auth_cat  = isset( $this->publish_mu_setttings['musite'][ $idx ]['author'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['author'] : '';

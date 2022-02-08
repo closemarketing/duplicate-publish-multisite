@@ -26,7 +26,7 @@ class PUBMULT_Publish {
 	public function __construct() {
 		$this->options = get_option( 'publish_mu_setttings' );
 		// Publish to other site.
-		add_action( 'save_post_post', array( $this, 'publish_other_site' ), 10, 3 );
+		add_action( 'save_post_post', array( $this, 'publish_other_site' ), 5, 3 );
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'scripts_sync_all_entries' ) );
 		add_action( 'wp_ajax_sync_all_entries', array( $this, 'sync_all_entries' ) );
@@ -60,7 +60,7 @@ class PUBMULT_Publish {
 				$target_cats = explode( ',', $site['target_cat'] );
 
 				$check_terms   = array( $term_id );
-				$target_author = is_numeric( $site['author'] ) ? $site['author'] : '';
+				$target_author = isset( $site['author'] ) ? $site['author'] : 'any';
 
 				$children_terms = get_term_children( $term_id, $tax_name );
 				if ( $children_terms ) {
@@ -87,7 +87,7 @@ class PUBMULT_Publish {
 	 * @param array   $target_cats Cats to target.
 	 * @return void
 	 */
-	private function update_post( $site, $source_post_id, $target_post_id = false, $target_author = 0, $target_cats = array() ) {
+	private function update_post( $site, $source_post_id, $target_post_id = false, $target_author = 'any', $target_cats = array() ) {
 		// Get data to copy.
 		$source_post      = get_post( $source_post_id );
 		$source_data      = get_post_custom( $source_post_id );
@@ -102,16 +102,22 @@ class PUBMULT_Publish {
 		switch_to_blog( $site );
 		$this->log_it( 'Sourcepermalink:' . $source_permalink );
 
+		// Prevents infinite loop.
+		remove_action( 'save_post_post', array( $this, 'publish_other_site' ), 5 );
+
+		$post_arg = array(
+			'post_title'   => $source_post->post_title,
+			'post_content' => $source_post->post_content,
+			'post_status'  => $source_post->post_status,
+			'post_type'    => $source_post->post_type,
+			'post_date'    => $source_post->post_date,
+		);
 		if ( ! $target_post_id ) {
-			$post_arg       = array(
-				'post_title'   => $source_post->post_title,
-				'post_content' => $source_post->post_content,
-				'post_status'  => $source_post->post_status,
-				'post_type'    => $source_post->post_type,
-				'post_date'    => $source_post->post_date,
-			);
-			if ( $target_author ) {
-				$post_arg['post_author'] = $target_author;
+			if ( 'any' === $target_author ) {
+				add_existing_user_to_blog( array( 'user_id' => $source_post->post_author, 'role' => 'author' ) );
+				$post_arg['post_author'] = (int) $source_post->post_author;
+			} else {
+				$post_arg['post_author'] = (int) $target_author;
 			}
 			$target_post_id = wp_insert_post( $post_arg );
 			foreach ( $source_data as $key => $values ) {
@@ -124,19 +130,13 @@ class PUBMULT_Publish {
 
 			$this->log_it( 'Create post: ' . $target_post_id . ' Site:' . $site );
 		} else {
-			$post_arg = array(
-				'ID'           => $target_post_id,
-				'post_title'   => $source_post->post_title,
-				'post_content' => $source_post->post_content,
-				'post_status'  => $source_post->post_status,
-				'post_type'    => $source_post->post_type,
-				'post_date'    => $source_post->post_date,
-			);
-			if ( $target_author ) {
+			$post_arg['ID'] = (int) $target_post_id;
+
+			if ( $target_author && 'any' !== $target_author ) {
 				$post_arg['post_author'] = $target_author;
 			}
-
 			wp_update_post( $post_arg );
+
 			foreach ( $source_data as $key => $values ) {
 				foreach ( $values as $value ) {
 					if ( '_thumbnail_id' !== $key ) {
@@ -301,7 +301,7 @@ class PUBMULT_Publish {
 		$source_cat_id    = isset( $_POST['source_cat_id'] ) ? substr( esc_attr( $_POST['source_cat_id'] ), 9 ) : '';
 		$target_site_id   = isset( $_POST['target_site_id'] ) ? esc_attr( $_POST['target_site_id'] ) : '';
 		$target_cat_id    = isset( $_POST['target_cat_id'] ) ? esc_attr( $_POST['target_cat_id'] ) : '';
-		$target_author_id = isset( $_POST['target_author_id'] ) ? esc_attr( $_POST['target_author_id'] ) : '';
+		$target_author_id = isset( $_POST['target_author_id'] ) ? esc_attr( $_POST['target_author_id'] ) : 'any';
 		$sync_loop        = isset( $_POST['sync_loop'] ) ? esc_attr( $_POST['sync_loop'] ) : 0;
 
 		if ( isset( $_POST['target_cats_id'] ) ) {
