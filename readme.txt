@@ -3,9 +3,9 @@ Contributors: closemarketing, davidperez, sacrajaimez
 Tags: multisite, duplicate, sync posts
 Donate link: https://close.marketing/go/donate/ 
 Requires at least: 4.0
-Tested up to: 5.9
-Stable tag: 1.5
-Version: 1.5
+Tested up to: 6.0
+Stable tag: 1.6
+Version: 1.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,6 +28,9 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Developers ==
 
 == Changelog =
+= 1.6 =
+*	Resend images after change it in source site.
+
 = 1.5 =
 *	Option SEO Canonical optional.
 *  Option autodetect Author.

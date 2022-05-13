@@ -19,7 +19,13 @@ defined( 'ABSPATH' ) || exit;
  */
 class PUBMULT_Publish {
 
+	/**
+	 * Entries object to sync
+	 *
+	 * @var object
+	 */
 	private $entries;
+
 	/**
 	 * Construct of Class
 	 */
@@ -76,7 +82,7 @@ class PUBMULT_Publish {
 	/**
 	 * Updates post for multisite
 	 *
-	 * @param int     $source_site Site origin.
+	 * @param int     $target_site Site origin.
 	 * @param int     $source_post_id Post id origin.
 	 * @param boolean $target_post_id Target.
 	 * @param int     $target_author Target author.
@@ -110,7 +116,12 @@ class PUBMULT_Publish {
 		);
 		if ( ! $target_post_id ) {
 			if ( 'any' === $target_author ) {
-				add_existing_user_to_blog( array( 'user_id' => $source_post->post_author, 'role' => 'author' ) );
+				add_existing_user_to_blog(
+					array(
+						'user_id' => $source_post->post_author,
+						'role'    => 'author',
+						)
+					);
 				$post_arg['post_author'] = (int) $source_post->post_author;
 			} else {
 				$post_arg['post_author'] = (int) $target_author;
@@ -233,13 +244,15 @@ class PUBMULT_Publish {
 			add_post_meta( $post_id, '_yoast_wpseo_canonical', $url );
 		}
 	}
-	/**
-	 * # AJAX Sync
-	 * ---------------------------------------------------------------------------------------------------- */
 
+	/**
+	 * Ajax Sync for entries.
+	 *
+	 * @return void
+	 */
 	public function scripts_sync_all_entries() {
 
-		wp_enqueue_script( 
+		wp_enqueue_script(
 			'sync-all-entries',
 			plugins_url( '/assets/sync-all-entries.js', __FILE__ ),
 			array( 'jquery' ),
@@ -273,7 +286,7 @@ class PUBMULT_Publish {
 		$sync_loop        = isset( $_POST['sync_loop'] ) ? esc_attr( $_POST['sync_loop'] ) : 0;
 
 		if ( isset( $_POST['target_cats_id'] ) ) {
-			foreach ( $_POST['target_cats_id'] as $target_cat ){
+			foreach ( $_POST['target_cats_id'] as $target_cat ) {
 				$posstr = strpos( esc_attr( $target_cat ), 'target_cat_category-' );
 				if ( false !== $posstr ) {
 					$string_cat = substr( $target_cat, $posstr + 20 );
