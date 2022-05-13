@@ -50,7 +50,6 @@ class PUBMULT_Publish {
 		if ( 'post' !== $post->post_type && ! isset( $this->options['musite'] ) ) {
 			return;
 		}
-		$this->log_it( $this->options );
 		if ( isset( $this->options['musite'] ) && $this->options['musite'] ) {
 			foreach ( $this->options['musite'] as $site ) {
 				$sep         = strpos( $site['taxonomy'], '|' ) ? '|' : '-';
@@ -66,12 +65,9 @@ class PUBMULT_Publish {
 				if ( $children_terms ) {
 					$check_terms = array_merge( $children_terms, $check_terms );
 				}
-				$this->log_it( 'Terms: ' . implode( ',', $check_terms ) );
 				if ( has_term( $check_terms, $tax_name, $post->ID ) ) {
 					$target_post_id = get_post_meta( $post->ID, 'publish_mu_site_' . $site['site'], true );
 					$this->update_post( $site['site'], $post->ID, $target_post_id, $target_author, $target_cats );
-				} else {
-					$this->log_it( 'Not update: ' . $post->ID . ' Site:' . $site['site'] );
 				}
 			}
 		}
@@ -80,27 +76,27 @@ class PUBMULT_Publish {
 	/**
 	 * Updates post for multisite
 	 *
-	 * @param int     $site Site origin.
+	 * @param int     $source_site Site origin.
 	 * @param int     $source_post_id Post id origin.
 	 * @param boolean $target_post_id Target.
 	 * @param int     $target_author Target author.
 	 * @param array   $target_cats Cats to target.
 	 * @return void
 	 */
-	private function update_post( $site, $source_post_id, $target_post_id = false, $target_author = 'any', $target_cats = array() ) {
+	private function update_post( $target_site, $source_post_id, $target_post_id = false, $target_author = 'any', $target_cats = array() ) {
 		// Get data to copy.
 		$source_post      = get_post( $source_post_id );
 		$source_data      = get_post_custom( $source_post_id );
 		$source_permalink = get_the_permalink( $source_post_id );
 
 		// Get image data.
-		$post_thumbnail_id = get_post_thumbnail_id( $source_post_id );
-		$image_url         = wp_get_attachment_image_src( $post_thumbnail_id, 'full' );
+		$post_thumbnail_id   = get_post_thumbnail_id( $source_post_id );
+		$image_url           = wp_get_attachment_image_src( $post_thumbnail_id, 'full' );
+		$publish_mu_image_id = (int) get_post_meta( $source_post_id, 'publish_mu_site_image_id', true );
+		$is_image_changed    = $post_thumbnail_id && $post_thumbnail_id !== $publish_mu_image_id ? true : false;
 
 		// Copy data.
-		$original_blog_id = get_current_blog_id();
-		switch_to_blog( $site );
-		$this->log_it( 'Sourcepermalink:' . $source_permalink );
+		switch_to_blog( $target_site );
 
 		// Prevents infinite loop.
 		remove_action( 'save_post_post', array( $this, 'publish_other_site' ), 5 );
@@ -127,8 +123,6 @@ class PUBMULT_Publish {
 					}
 				}
 			}
-
-			$this->log_it( 'Create post: ' . $target_post_id . ' Site:' . $site );
 		} else {
 			$post_arg['ID'] = (int) $target_post_id;
 
@@ -144,12 +138,10 @@ class PUBMULT_Publish {
 					}
 				}
 			}
-			$this->log_it( 'Update post: ' . $target_post_id . ' Site:' . $site );
 		}
 		/**
 		 * ## Terms
 		 * --------------------------- */
-		$this->log_it( 'has terms:' . implode( ',', $target_cats ) );
 		$cats_id = array();
 		foreach ( $target_cats as $target_cat ) {
 			if ( strpos( $target_cat, '-' ) ) {
@@ -169,8 +161,7 @@ class PUBMULT_Publish {
 		/**
 		 * ## Thumbnail
 		 * --------------------------- */
-		$this->log_it( 'has thumb Target_post_id:' . has_post_thumbnail( $target_post_id ) );
-		if ( ! has_post_thumbnail( $target_post_id ) ) {
+		if ( $is_image_changed ) {
 			// Add Featured Image to Post.
 			$upload_dir = wp_upload_dir();
 			if ( is_array( $image_url ) ) {
@@ -185,7 +176,6 @@ class PUBMULT_Publish {
 				} else {
 					$file = $upload_dir['basedir'] . '/' . $filename;
 				}
-				$this->log_it( 'Image data: ' . $image_data );
 
 				// Create the image  file on the server.
 				file_put_contents( $file, $image_data ); //phpcs:ignore
@@ -213,8 +203,6 @@ class PUBMULT_Publish {
 				// Assign metadata to attachment.
 				wp_update_attachment_metadata( $attach_id, $attach_data );
 
-				$this->log_it( 'attachment id:' . $attach_id );
-
 				// And finally assign featured image to post.
 				set_post_thumbnail( $target_post_id, $attach_id );
 			}
@@ -225,9 +213,10 @@ class PUBMULT_Publish {
 			$this->adds_seo_tags( $source_permalink, $target_post_id );
 		}
 
-		switch_to_blog( $original_blog_id );
+		restore_current_blog();
 
-		update_post_meta( $source_post_id, 'publish_mu_site_' . $site, $target_post_id );
+		update_post_meta( $source_post_id, 'publish_mu_site_' . $target_site, $target_post_id );
+		update_post_meta( $source_post_id, 'publish_mu_site_image_id', $post_thumbnail_id );
 	}
 
 	/**
@@ -238,31 +227,10 @@ class PUBMULT_Publish {
 	 * @return void
 	 */
 	private function adds_seo_tags( $url, $post_id ) {
-
-		$this->log_it( 'Canonical' . $url );
-
 		if ( is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
-			$this->log_it( 'Canonical rank:' . $url . ' pid' . $post_id );
-
 			add_post_meta( $post_id, 'rank_math_canonical_url', $url );
 		} elseif ( is_plugin_active( 'wordpress-seo/wp-seo.php' ) || is_plugin_active( 'wordpress-seo-premium/wp-seo-premium.php' ) ) {
 			add_post_meta( $post_id, '_yoast_wpseo_canonical', $url );
-		}
-	}
-
-	/**
-	 * Logs to debug
-	 *
-	 * @param array $message Message to log.
-	 * @return void
-	 */
-	private function log_it( $message ) {
-		if ( WP_DEBUG === true ) {
-			if ( is_array( $message ) || is_object( $message ) ) {
-				error_log( 'Publish MU: ' . print_r( $message, true ) ); //phpcs:ignore
-			} else {
-				error_log( 'Publish MU: ' . $message ); //phpcs:ignore
-			}
 		}
 	}
 	/**
