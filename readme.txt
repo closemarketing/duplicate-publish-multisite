@@ -30,6 +30,7 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Changelog =
 = 1.6 =
 *	Resend images after change it in source site.
+*  Changed method to copy image. More stable.
 
 = 1.5 =
 *	Option SEO Canonical optional.
