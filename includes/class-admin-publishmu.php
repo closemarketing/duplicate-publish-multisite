@@ -98,6 +98,8 @@ class PUBMULT_Publish {
 		// Get image data.
 		$post_thumbnail_id   = get_post_thumbnail_id( $source_post_id );
 		$image_url           = wp_get_attachment_image_src( $post_thumbnail_id, 'full' );
+		$uploads             = wp_upload_dir();
+		$source_image_path   = str_replace( $uploads['baseurl'], $uploads['basedir'], $image_url[0] );
 		$publish_mu_image_id = (int) get_post_meta( $source_post_id, 'publish_mu_site_image_id', true );
 		$is_image_changed    = $post_thumbnail_id && $post_thumbnail_id !== $publish_mu_image_id ? true : false;
 
@@ -177,19 +179,17 @@ class PUBMULT_Publish {
 			$upload_dir = wp_upload_dir();
 			if ( is_array( $image_url ) ) {
 				$image_url = $image_url[0];
-
-				$image_data = file_get_contents( $image_url ); //phpcs:ignore
-				$filename   = basename( $image_url );
+				$filename  = basename( $image_url );
 
 				// Check folder permission and define file location.
 				if ( wp_mkdir_p( $upload_dir['path'] ) ) {
-					$file = $upload_dir['path'] . '/' . $filename;
+					$target_image_path = $upload_dir['path'] . '/' . $filename;
 				} else {
-					$file = $upload_dir['basedir'] . '/' . $filename;
+					$target_image_path = $upload_dir['basedir'] . '/' . $filename;
 				}
 
-				// Create the image  file on the server.
-				file_put_contents( $file, $image_data ); //phpcs:ignore
+				// Copies to target folder.
+				copy( $source_image_path, $target_image_path );
 
 				// Check image file type.
 				$wp_filetype = wp_check_filetype( $filename, null );
@@ -203,13 +203,13 @@ class PUBMULT_Publish {
 				);
 
 				// Create the attachment.
-				$attach_id = wp_insert_attachment( $attachment, $file, $target_post_id );
+				$attach_id = wp_insert_attachment( $attachment, $target_image_path, $target_post_id );
 
 				// Include image.php.
 				require_once ABSPATH . 'wp-admin/includes/image.php';
 
 				// Define attachment metadata.
-				$attach_data = wp_generate_attachment_metadata( $attach_id, $file );
+				$attach_data = wp_generate_attachment_metadata( $attach_id, $target_image_path );
 
 				// Assign metadata to attachment.
 				wp_update_attachment_metadata( $attach_id, $attach_data );
