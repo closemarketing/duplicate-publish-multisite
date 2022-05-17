@@ -57,6 +57,11 @@ class PUBMULT_Publish {
 			return;
 		}
 		if ( isset( $this->options['musite'] ) && $this->options['musite'] ) {
+
+			$post_thumbnail_id   = get_post_thumbnail_id( $post->ID );
+			$publish_mu_image_id = (int) get_post_meta( $post->ID, 'publish_mu_site_image_id', true );
+			$is_image_changed    = $post_thumbnail_id && $post_thumbnail_id !== $publish_mu_image_id ? true : false;
+
 			foreach ( $this->options['musite'] as $site ) {
 				$sep         = strpos( $site['taxonomy'], '|' ) ? '|' : '-';
 				$tax         = explode( $sep, $site['taxonomy'] );
@@ -73,7 +78,7 @@ class PUBMULT_Publish {
 				}
 				if ( has_term( $check_terms, $tax_name, $post->ID ) ) {
 					$target_post_id = get_post_meta( $post->ID, 'publish_mu_site_' . $site['site'], true );
-					$this->update_post( $site['site'], $post->ID, $target_post_id, $target_author, $target_cats );
+					$this->update_post( $site['site'], $post->ID, $target_post_id, $target_author, $target_cats, $is_image_changed );
 				}
 			}
 		}
@@ -87,21 +92,20 @@ class PUBMULT_Publish {
 	 * @param boolean $target_post_id Target.
 	 * @param int     $target_author Target author.
 	 * @param array   $target_cats Cats to target.
+	 * @param boolean $is_image_changed Is changed the image in source site.
 	 * @return void
 	 */
-	private function update_post( $target_site, $source_post_id, $target_post_id = false, $target_author = 'any', $target_cats = array() ) {
+	private function update_post( $target_site, $source_post_id, $target_post_id = false, $target_author = 'any', $target_cats = array(), $is_image_changed = true ) {
 		// Get data to copy.
 		$source_post      = get_post( $source_post_id );
 		$source_data      = get_post_custom( $source_post_id );
 		$source_permalink = get_the_permalink( $source_post_id );
 
 		// Get image data.
-		$post_thumbnail_id   = get_post_thumbnail_id( $source_post_id );
-		$image_url           = wp_get_attachment_image_src( $post_thumbnail_id, 'full' );
-		$uploads             = wp_upload_dir();
-		$source_image_path   = str_replace( $uploads['baseurl'], $uploads['basedir'], $image_url[0] );
-		$publish_mu_image_id = (int) get_post_meta( $source_post_id, 'publish_mu_site_image_id', true );
-		$is_image_changed    = $post_thumbnail_id && $post_thumbnail_id !== $publish_mu_image_id ? true : false;
+		$post_thumbnail_id = get_post_thumbnail_id( $source_post_id );
+		$image_url         = wp_get_attachment_image_src( $post_thumbnail_id, 'full' );
+		$uploads           = wp_upload_dir();
+		$source_image_path = str_replace( $uploads['baseurl'], $uploads['basedir'], $image_url[0] );
 
 		// Copy data.
 		switch_to_blog( $target_site );
@@ -122,8 +126,8 @@ class PUBMULT_Publish {
 					array(
 						'user_id' => $source_post->post_author,
 						'role'    => 'author',
-						)
-					);
+					)
+				);
 				$post_arg['post_author'] = (int) $source_post->post_author;
 			} else {
 				$post_arg['post_author'] = (int) $target_author;
