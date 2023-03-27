@@ -20,11 +20,32 @@ defined( 'ABSPATH' ) || exit;
 class PUBMULT_Publish {
 
 	/**
+	 * Options of plugin
+	 *
+	 * @var array
+	 */
+	private $options;
+
+	/**
 	 * Entries object to sync
 	 *
 	 * @var object
 	 */
 	private $entries;
+
+	/**
+	 * Error message
+	 *
+	 * @var string
+	 */
+	private $msg_error_products;
+
+	/**
+	 * Ajax message
+	 *
+	 * @var string
+	 */
+	private $ajax_msg;
 
 	/**
 	 * Construct of Class
@@ -39,9 +60,6 @@ class PUBMULT_Publish {
 		add_action( 'wp_ajax_nopriv_sync_all_entries', array( $this, 'sync_all_entries' ) );
 	}
 
-	/**
-	 * # Publish to Multisite
-	 * ---------------------------------------------------------------------------------------------------- */
 	/**
 	 * Publish to other site
 	 *
@@ -260,7 +278,8 @@ class PUBMULT_Publish {
 			'sync-all-entries',
 			plugins_url( '/assets/sync-all-entries.js', __FILE__ ),
 			array( 'jquery' ),
-			PUBLISHMU_VERSION
+			PUBLISHMU_VERSION,
+			true
 		);
 
 		wp_localize_script(

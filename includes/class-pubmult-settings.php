@@ -160,13 +160,12 @@ class PUBMULT_Settings {
 			foreach ( $input['musite'] as $musite ) {
 				if ( $musite['taxonomy'] ) {
 					$cat_string = array();
-					foreach( $musite as $key => $value ) {
+					foreach ( $musite as $key => $value ) {
 						if ( false !== strpos( $key, 'target_cat_' ) ) {
 							$cat_string[] = str_replace( 'target_cat_', '', $key );
 						} else {
 							$sanitary_values['musite'][ $index ][ $key ] = sanitize_text_field( $value );
 						}
-
 					}
 					$sanitary_values['musite'][ $index ]['target_cat'] = implode( ',', $cat_string );
 					$index++;
@@ -209,14 +208,18 @@ class PUBMULT_Settings {
 		$subsites = get_sites();
 
 		foreach ( $subsites as $subsite ) {
-			$subsite_id   = (int) get_object_vars( $subsite )['blog_id'];
-			$subsite_name = get_blog_details( $subsite_id )->blogname;
+			if ( empty( get_object_vars( $subsite )['blog_id'] ) ) {
+				continue;
+			}
+			$subsite_id    = (int) get_object_vars( $subsite )['blog_id'];
+			$subsite_name  = get_blog_details( $subsite_id )->blogname;
+			$subsite_name .= ' - ' . $subsite->domain . $subsite->path;
 
 			if ( get_current_blog_id() !== $subsite_id ) {
 				$sites[ $subsite_id ] = $subsite_name;
 			}
 		}
-
+		asort( $sites );
 		return $sites;
 	}
 
@@ -247,7 +250,7 @@ class PUBMULT_Settings {
 				'order'      => 'ASC',
 			);
 			$terms_array = get_terms( $args_query );
-			if ( ! empty( $terms_array)){
+			if ( ! empty( $terms_array ) ) {
 				foreach ( $terms_array as $term ) {
 					$term_name = '';
 					if ( 0 !== $term->parent ) {
