@@ -4,8 +4,8 @@ Tags: multisite, duplicate, sync posts
 Donate link: https://close.marketing/go/donate/ 
 Requires at least: 4.0
 Tested up to: 6.2
-Stable tag: 1.6.1
-Version: 1.6.1
+Stable tag: 1.6.2
+Version: 1.6.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,6 +28,9 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Developers ==
 
 == Changelog =
+= 1.6.2 =
+*	 Fix: loads only first 100 sites to publish.
+
 = 1.6.1 =
 *	 Fix: sites to publish list order alphabetical and prevents errors.
 
