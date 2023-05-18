@@ -1,4 +1,4 @@
-=== Duplicate Publish Multisite ===
+=== Publish Duplicate Post to Multisite ===
 Contributors: closemarketing, davidperez, sacrajaimez
 Tags: multisite, duplicate, sync posts
 Donate link: https://close.marketing/go/donate/ 
