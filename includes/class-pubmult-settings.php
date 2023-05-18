@@ -205,7 +205,7 @@ class PUBMULT_Settings {
 	 */
 	private function get_sites_publish() {
 		$sites    = array();
-		$subsites = get_sites();
+		$subsites = get_sites( [ 'number' => 500 ] ); //get first 500 sites.
 
 		foreach ( $subsites as $subsite ) {
 			if ( empty( get_object_vars( $subsite )['blog_id'] ) ) {
