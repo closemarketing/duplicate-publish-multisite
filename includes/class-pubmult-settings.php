@@ -214,9 +214,8 @@ class PUBMULT_Settings {
 	public function category_publish() {
 		$site_id = isset( $_POST['site_id'] ) ? sanitize_key( $_POST['site_id'] ) : '';
 		$index   = isset( $_POST['index'] ) ? sanitize_key( $_POST['index'] ) : '';
-		$nonce   = isset( $_POST['nonce'] ) ? sanitize_key( $_POST['nonce'] ) : '';
-		check_ajax_referer( 'category_publish_nonce', 'nonce' );
-		if ( true ) {
+
+		if ( check_ajax_referer( 'category_publish_nonce', 'nonce' ) ) {
 			$html_cat = '';
 			foreach ( HELPER::get_categories_from( $site_id ) as $key => $value ) {
 				//$html_cat .= '<option value="' . esc_html( $key ) . '" >' . esc_html( $value ) . '</option>';
@@ -241,13 +240,28 @@ class PUBMULT_Settings {
 	 * @return void
 	 */
 	public function musite_callback() {
-		$sites_options = HELPER::get_sites_publish();
-		$posts_options = HELPER::get_categories_from();
-		$size          = isset( $this->publish_mu_setttings['musite'] ) ? count( $this->publish_mu_setttings['musite'] ) -1 : 0;
+		$sites_options     = HELPER::get_sites_publish();
+		$post_type_options = HELPER::get_post_types();
+		$category_options  = HELPER::get_categories_from();
+		$size              = isset( $this->publish_mu_setttings['musite'] ) ? count( $this->publish_mu_setttings['musite'] ) - 1 : 0;
 
 		for ( $idx = 0, $size; $idx <= $size; ++$idx ) {
 			?>
 			<div class="publishmu repeating" style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+				<div class="save-item">
+					<p><strong><?php esc_html_e( 'Post type', 'duplicate-publish-multisite' ); ?></strong></p>
+					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][post_type]' class="source-post_type">
+						<?php
+						$post_type = ! empty( $this->publish_mu_setttings['musite'][ $idx ]['post_type'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['post_type'] : 'post';
+						// Load Post type Options.
+						foreach ( $post_type_options as $key => $value ) {
+							echo '<option value="' . esc_html( $key ) . '" ';
+							selected( $key, $post_type );
+							echo '>' . esc_html( $value ) . '</option>';
+						}
+						?>
+					</select>
+				</div>
 				<div class="save-item">
 					<p><strong><?php esc_html_e( 'Category from load', 'duplicate-publish-multisite' ); ?></strong></p>
 					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][taxonomy]' class="source-category">
@@ -255,7 +269,7 @@ class PUBMULT_Settings {
 						<?php
 						$taxonomy = isset( $this->publish_mu_setttings['musite'][ $idx ]['taxonomy'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['taxonomy'] : '';
 						// Load Page Options.
-						foreach ( $posts_options as $key => $value ) {
+						foreach ( $category_options as $key => $value ) {
 							echo '<option value="' . esc_html( $key ) . '" ';
 							selected( $key, $taxonomy );
 							echo '>' . esc_html( $value ) . '</option>';

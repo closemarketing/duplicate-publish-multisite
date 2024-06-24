@@ -3,6 +3,7 @@ jQuery(document).ready(function($) {
 	$('.save-item .sync-all-entries').on('click', function(e){
 		e.preventDefault();
 
+		var_post_type      = $(this).closest('.publishmu').find('.source-post_type').val();
 		var_source_cat_id  = $(this).closest('.publishmu').find('.source-category').val();
 		var_target_site_id = $(this).closest('.publishmu').find('.site-publish').val();
 		var_target_author_id = $(this).closest('.publishmu').find('.author-publish').val();
@@ -20,6 +21,7 @@ jQuery(document).ready(function($) {
 				url: ajaxSyncEntries.url,
 				data: {
 					action: 'sync_all_entries',
+					post_type: var_post_type,
 					source_cat_id: var_source_cat_id,
 					target_site_id: var_target_site_id,
 					target_cats_id: var_target_cats_id,

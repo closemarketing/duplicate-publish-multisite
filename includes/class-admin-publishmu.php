@@ -53,7 +53,7 @@ class PUBMULT_Publish {
 	public function __construct() {
 		$this->options = get_option( 'publish_mu_setttings' );
 		// Publish to other site.
-		add_action( 'save_post_post', array( $this, 'publish_other_site' ), 5, 3 );
+		add_action( 'save_post', array( $this, 'publish_other_site' ), 5, 3 );
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'scripts_sync_all_entries' ) );
 		add_action( 'wp_ajax_sync_all_entries', array( $this, 'sync_all_entries' ) );
@@ -70,33 +70,40 @@ class PUBMULT_Publish {
 	 */
 	public function publish_other_site( $post_id, $post, $update ) {
 		// Only set for post_type = post! or isset options.
-		if ( 'post' !== $post->post_type && ! isset( $this->options['musite'] ) ) {
+		if ( empty( $this->options['musite'] ) ) {
 			return;
 		}
-		if ( isset( $this->options['musite'] ) && $this->options['musite'] ) {
+		$post_type_saved = ! empty( $post->post_type ) ? $post->post_type : 'post';
+		$search_key      = array_search( $post_type_saved, array_column( $this->options['musite'], 'post_type' ), true );
+		if ( false === $search_key ) {
+			return;
+		}
 
-			$post_thumbnail_id   = get_post_thumbnail_id( $post->ID );
-			$publish_mu_image_id = (int) get_post_meta( $post->ID, 'publish_mu_site_image_id', true );
-			$is_image_changed    = $post_thumbnail_id && $post_thumbnail_id !== $publish_mu_image_id ? true : false;
+		$post_thumbnail_id   = get_post_thumbnail_id( $post->ID );
+		$publish_mu_image_id = (int) get_post_meta( $post->ID, 'publish_mu_site_image_id', true );
+		$is_image_changed    = $post_thumbnail_id && $post_thumbnail_id !== $publish_mu_image_id ? true : false;
 
-			foreach ( $this->options['musite'] as $site ) {
-				$sep         = strpos( $site['taxonomy'], '|' ) ? '|' : '-';
-				$tax         = explode( $sep, $site['taxonomy'] );
-				$tax_name    = $tax[0];
-				$term_id     = $tax[1];
-				$target_cats = explode( ',', $site['target_cat'] );
+		foreach ( $this->options['musite'] as $site ) {
+			$site_post_type = isset( $site['post_type'] ) ? $site['post_type'] : 'post';
+			if ( $site_post_type !== $post_type_saved ) {
+				continue;
+			}
+			$sep         = strpos( $site['taxonomy'], '|' ) ? '|' : '-';
+			$tax         = explode( $sep, $site['taxonomy'] );
+			$tax_name    = $tax[0];
+			$term_id     = $tax[1];
+			$target_cats = explode( ',', $site['target_cat'] );
 
-				$check_terms   = array( $term_id );
-				$target_author = isset( $site['author'] ) ? $site['author'] : 'any';
+			$check_terms   = array( $term_id );
+			$target_author = isset( $site['author'] ) ? $site['author'] : 'any';
 
-				$children_terms = get_term_children( $term_id, $tax_name );
-				if ( $children_terms ) {
-					$check_terms = array_merge( $children_terms, $check_terms );
-				}
-				if ( has_term( $check_terms, $tax_name, $post->ID ) ) {
-					$target_post_id = get_post_meta( $post->ID, 'publish_mu_site_' . $site['site'], true );
-					$this->update_post( $site['site'], $post->ID, $target_post_id, $target_author, $target_cats, $is_image_changed );
-				}
+			$children_terms = get_term_children( $term_id, $tax_name );
+			if ( $children_terms ) {
+				$check_terms = array_merge( $children_terms, $check_terms );
+			}
+			if ( has_term( $check_terms, $tax_name, $post->ID ) ) {
+				$target_post_id = get_post_meta( $post->ID, 'publish_mu_site_' . $site['site'], true );
+				$this->update_post( $site['site'], $post->ID, $target_post_id, $target_author, $target_cats, $is_image_changed );
 			}
 		}
 	}
@@ -297,30 +304,36 @@ class PUBMULT_Publish {
 	public function sync_all_entries() {
 		$doing_ajax   = defined( 'DOING_AJAX' ) && DOING_AJAX;
 		$not_sapi_cli = substr( php_sapi_name(), 0, 3 ) != 'cli' ? true : false;
-		$nonce        = isset( $_POST['nonce'] ) ? esc_attr( $_POST['nonce'] ) : '';
 
 		// Variables of loop.
-		$source_cat_id    = isset( $_POST['source_cat_id'] ) ? substr( esc_attr( $_POST['source_cat_id'] ), 9 ) : '';
-		$target_site_id   = isset( $_POST['target_site_id'] ) ? esc_attr( $_POST['target_site_id'] ) : '';
-		$target_cat_id    = isset( $_POST['target_cat_id'] ) ? esc_attr( $_POST['target_cat_id'] ) : '';
-		$target_author_id = isset( $_POST['target_author_id'] ) ? esc_attr( $_POST['target_author_id'] ) : 'any';
-		$sync_loop        = isset( $_POST['sync_loop'] ) ? esc_attr( $_POST['sync_loop'] ) : 0;
+		$post_type        = isset( $_POST['post_type'] ) ? sanitize_text_field( wp_unslash( $_POST['post_type'] ) ) : 'post';
+		$taxonomy         = isset( $_POST['source_cat_id'] ) ? explode( '-', sanitize_text_field( wp_unslash( $_POST['source_cat_id'] ) ) ) : array();
+		$source_cat_id    = (int) $taxonomy[1];
+		$target_site_id   = isset( $_POST['target_site_id'] ) ? (int) $_POST['target_site_id'] : 0;
+		$target_author_id = isset( $_POST['target_author_id'] ) ? sanitize_text_field( wp_unslash( $_POST['target_author_id'] ) ) : 'any';
+		$sync_loop        = isset( $_POST['sync_loop'] ) ? (int) $_POST['sync_loop'] : 0;
 
 		if ( isset( $_POST['target_cats_id'] ) ) {
 			foreach ( $_POST['target_cats_id'] as $target_cat ) {
-				$posstr = strpos( esc_attr( $target_cat ), 'target_cat_category-' );
+				$posstr = strpos( sanitize_text_field( $target_cat ), 'target_cat_category-' );
 				if ( false !== $posstr ) {
-					$string_cat = substr( $target_cat, $posstr + 20 );
+					$string_cat    = substr( $target_cat, $posstr + 20 );
 					$target_cats[] = substr( $string_cat, 0, -1 );
 				}
 			}
 		}
 
-		check_ajax_referer( 'sync_all_entries_nonce', 'nonce' );
+		if ( ! check_ajax_referer( 'sync_all_entries_nonce', 'nonce' ) ) {
+			if ( $doing_ajax ) {
+				wp_send_json_error( array( 'msg' => 'Error' ) );
+			} else {
+				die();
+			}
+		}
 		// Start.
 		if ( ! isset( $this->entries ) ) {
 			$args_posts = array(
-				'post_type'   => 'post',
+				'post_type'   => $post_type,
 				'numberposts' => -1,
 				'orderby'     => 'date',
 				'order'       => 'ASC',
@@ -343,9 +356,6 @@ class PUBMULT_Publish {
 			$this->msg_error_products = array();
 
 			if ( $entries_count ) {
-				if ( ( $doing_ajax ) || $not_sapi_cli ) {
-					$count = $sync_loop + 1;
-				}
 				if ( $sync_loop > $entries_count ) {
 					if ( $doing_ajax ) {
 						wp_send_json_error(

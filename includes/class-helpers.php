@@ -45,6 +45,28 @@ class HELPER {
 	}
 
 	/**
+	 * Get list of post types
+	 *
+	 * @return array
+	 */
+	public static function get_post_types() {
+		$post_types = get_post_types( array( 'public' => true ), 'objects' );
+		$post_types = array_filter(
+			$post_types,
+			function ( $post_type ) {
+				return ! in_array( $post_type->name, array( 'attachment', 'revision', 'nav_menu_item' ), true );
+			}
+		);
+		$post_types = array_map(
+			function ( $post_type ) {
+				return $post_type->label;
+			},
+			$post_types
+		);
+		return $post_types;
+	}
+
+	/**
 	 * Get categories from.
 	 *
 	 * @param integer $site Site ID.
