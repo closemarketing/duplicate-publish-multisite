@@ -24,6 +24,9 @@
 defined( 'ABSPATH' ) || die( 'No script kiddies please!' );
 
 define( 'PUBLISHMU_VERSION', '1.6.2' );
+define( 'PUBLISHMU_PLUGIN', __FILE__ );
+define( 'PUBLISHMU_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define( 'PUBLISHMU_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 
 add_action( 'plugins_loaded', 'pubmult_plugin_init' );
 /**
@@ -36,5 +39,6 @@ function pubmult_plugin_init() {
 }
 
 // Include files.
-require_once plugin_dir_path( __FILE__ ) . '/includes/class-pubmult-settings.php';
-require_once plugin_dir_path( __FILE__ ) . '/includes/class-admin-publishmu.php';
+require_once PUBLISHMU_PLUGIN_PATH . '/includes/class-helpers.php';
+require_once PUBLISHMU_PLUGIN_PATH . '/includes/class-pubmult-settings.php';
+require_once PUBLISHMU_PLUGIN_PATH . '/includes/class-admin-publishmu.php';

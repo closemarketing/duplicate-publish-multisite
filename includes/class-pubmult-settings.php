@@ -10,6 +10,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
+use Close\DuplicatePublishMultisite\HELPER;
+
 /**
  * Class Metabox.
  *
@@ -20,10 +22,16 @@ defined( 'ABSPATH' ) || exit;
 class PUBMULT_Settings {
 
 	/**
+	 * Settings of plugin.
+	 *
+	 * @var array
+	 */
+	private $publish_mu_setttings;
+
+	/**
 	 * Construct of Class
 	 */
 	public function __construct() {
-
 		add_action( 'admin_menu', array( $this, 'add_plugin_page' ) );
 		add_action( 'admin_init', array( $this, 'page_init' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'load_admin_styles' ) );
@@ -32,10 +40,6 @@ class PUBMULT_Settings {
 		add_action( 'wp_ajax_category_publish', array( $this, 'category_publish' ) );
 		add_action( 'wp_ajax_nopriv_category_publish', array( $this, 'category_publish' ) );
 	}
-
-	/**
-	 * # Functions
-	 * ---------------------------------------------------------------------------------------------------- */
 
 	/**
 	 * Adds plugin page.
@@ -66,7 +70,7 @@ class PUBMULT_Settings {
 			PUBLISHMU_VERSION
 		);
 
-		wp_enqueue_script( 
+		wp_enqueue_script(
 			'category-publish',
 			plugins_url( '/assets/category-publish.js', __FILE__ ),
 			array( 'jquery' ),
@@ -143,7 +147,6 @@ class PUBMULT_Settings {
 			'pubmult-admin',
 			'pubmult_setting_section'
 		);
-
 	}
 
 	/**
@@ -187,6 +190,11 @@ class PUBMULT_Settings {
 		esc_html_e( 'Make the relations between sites and categories.', 'duplicate-publish-multisite' );
 	}
 
+	/**
+	 * SEO Canonical Callback
+	 *
+	 * @return void
+	 */
 	public function seo_canonical_callback() {
 		?>
 		<select name="publish_mu_setttings[seo_canonical]" id="seo_canonical">
@@ -196,104 +204,6 @@ class PUBMULT_Settings {
 			<option value="no" <?php echo esc_html( $selected ); ?>><?php esc_html_e( 'No', 'import-holded-products-woocommerce' ); ?></option>
 		</select>
 		<?php
-	}
-
-	/**
-	 * Get list to sites publish
-	 *
-	 * @return array
-	 */
-	private function get_sites_publish() {
-		$sites    = array();
-		$subsites = get_sites( [ 'number' => 500 ] ); //get first 500 sites.
-
-		foreach ( $subsites as $subsite ) {
-			if ( empty( get_object_vars( $subsite )['blog_id'] ) ) {
-				continue;
-			}
-			$subsite_id    = (int) get_object_vars( $subsite )['blog_id'];
-			$subsite_name  = get_blog_details( $subsite_id )->blogname;
-			$subsite_name .= ' - ' . $subsite->domain . $subsite->path;
-
-			if ( get_current_blog_id() !== $subsite_id ) {
-				$sites[ $subsite_id ] = $subsite_name;
-			}
-		}
-		asort( $sites );
-		return $sites;
-	}
-
-	/**
-	 * Get categories from.
-	 *
-	 * @param integer $site Site ID.
-	 * @return array
-	 */
-	private function get_categories_from( $site = 0 ) {
-		$posts_options = array();
-		if ( 0 !== $site ) {
-			$original_blog_id = get_current_blog_id();
-			switch_to_blog( $site );
-		}
-
-		$taxonomies = array(
-			'category',
-			'post_tag',
-		);
-		foreach ( $taxonomies as $taxonomy ) {
-			$taxonomy_obj = get_taxonomy( $taxonomy );
-			// * Get posts in array
-			$args_query  = array(
-				'taxonomy'   => $taxonomy,
-				'hide_empty' => false,
-				'orderby'    => 'title', // menu_order, rand, date.
-				'order'      => 'ASC',
-			);
-			$terms_array = get_terms( $args_query );
-			if ( ! empty( $terms_array ) ) {
-				foreach ( $terms_array as $term ) {
-					$term_name = '';
-					if ( 0 !== $term->parent ) {
-						$term_parent = get_term_by( 'id', $term->parent, $taxonomy );
-						$term_name  .= $term_parent->name . ' > ';
-					}
-					$term_name .= $term->name;
-
-					$posts_options[ $taxonomy . '-' . $term->term_id ] = $term_name;
-				}
-			}
-		}
-		if ( 0 !== $site ) {
-			switch_to_blog( $original_blog_id );
-		}
-		asort( $posts_options );
-		return $posts_options;
-	}
-
-	/**
-	 * Get authors from.
-	 *
-	 * @param integer $site Site ID.
-	 * @return array
-	 */
-	private function get_authors_from( $site = 0 ) {
-		$authors_options = array();
-		if ( 0 !== $site ) {
-			$original_blog_id = get_current_blog_id();
-			switch_to_blog( $site );
-		}
-
-		$users = get_users();
-		foreach ( $users as $user ) {
-			$authors_options[ $user->ID ] = $user->display_name;
-		}
-		if ( 0 !== $site ) {
-			switch_to_blog( $original_blog_id );
-		}
-		asort( $authors_options );
-		$authors_options = array( 'any' => esc_html__( 'Autodetect', 'duplicate-publish-multisite' ) ) + $authors_options;
-
-		return $authors_options;
 	}
 
 	/**
@@ -308,7 +218,7 @@ class PUBMULT_Settings {
 		check_ajax_referer( 'category_publish_nonce', 'nonce' );
 		if ( true ) {
 			$html_cat = '';
-			foreach ( $this->get_categories_from( $site_id ) as $key => $value ) {
+			foreach ( HELPER::get_categories_from( $site_id ) as $key => $value ) {
 				//$html_cat .= '<option value="' . esc_html( $key ) . '" >' . esc_html( $value ) . '</option>';
 				$html_cat .= '<p><input type="checkbox"';
 				$html_cat .= 'name="publish_mu_setttings[musite][' . esc_html( $index ) . '][target_cat_' . esc_html( $key ) . ']"';
@@ -316,7 +226,7 @@ class PUBMULT_Settings {
 				$html_cat .= '/>' . esc_html( $value ) . '</p>';
 			}
 			$html_auth = '';
-			foreach ( $this->get_authors_from( $site_id ) as $key => $value ) {
+			foreach ( HELPER::get_authors_from( $site_id ) as $key => $value ) {
 				$html_auth .= '<option value="' . esc_html( $key ) . '" >' . esc_html( $value ) . '</option>';
 			}
 			wp_send_json_success( array( $html_cat, $html_auth ) );
@@ -331,8 +241,8 @@ class PUBMULT_Settings {
 	 * @return void
 	 */
 	public function musite_callback() {
-		$sites_options = $this->get_sites_publish();
-		$posts_options = $this->get_categories_from();
+		$sites_options = HELPER::get_sites_publish();
+		$posts_options = HELPER::get_categories_from();
 		$size          = isset( $this->publish_mu_setttings['musite'] ) ? count( $this->publish_mu_setttings['musite'] ) -1 : 0;
 
 		for ( $idx = 0, $size; $idx <= $size; ++$idx ) {
@@ -380,7 +290,7 @@ class PUBMULT_Settings {
 					} else {
 						$terms_checked = explode( ',', $target_cat );
 					}
-					$cats_target_options = $this->get_categories_from( $site_target );
+					$cats_target_options = HELPER::get_categories_from( $site_target );
 					echo '<label class="category-publish" for="[musite][' . esc_html( $idx ) . '][label]">';
 					// Load Page Options.
 					echo '<div class="options">';
@@ -419,7 +329,7 @@ class PUBMULT_Settings {
 						$site_target = isset( $this->publish_mu_setttings['musite'][ $idx ]['site'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['site'] : '';
 						$auth_cat  = isset( $this->publish_mu_setttings['musite'][ $idx ]['author'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['author'] : '';
 
-						$authors_target_options = $this->get_authors_from( $site_target );
+						$authors_target_options = HELPER::get_authors_from( $site_target );
 						// Load Page Options.
 						foreach ( $authors_target_options as $key => $value ) {
 							echo '<option value="' . esc_html( $key ) . '" ';

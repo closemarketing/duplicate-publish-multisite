@@ -69,7 +69,6 @@ class PUBMULT_Publish {
 	 * @return void
 	 */
 	public function publish_other_site( $post_id, $post, $update ) {
-
 		// Only set for post_type = post! or isset options.
 		if ( 'post' !== $post->post_type && ! isset( $this->options['musite'] ) ) {
 			return;
@@ -273,7 +272,6 @@ class PUBMULT_Publish {
 	 * @return void
 	 */
 	public function scripts_sync_all_entries() {
-
 		wp_enqueue_script(
 			'sync-all-entries',
 			plugins_url( '/assets/sync-all-entries.js', __FILE__ ),
@@ -342,7 +340,6 @@ class PUBMULT_Publish {
 		} else {
 			$entries_count            = count( $this->entries[ $source_cat_id ] );
 			$item_id                  = $this->entries[ $source_cat_id ][ $sync_loop ];
-			$error_products_html      = '';
 			$this->msg_error_products = array();
 
 			if ( $entries_count ) {
