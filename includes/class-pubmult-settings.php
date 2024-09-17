@@ -288,6 +288,21 @@ class PUBMULT_Settings {
 					</select>
 				</div>
 				<div class="save-item">
+					<p><strong><?php esc_html_e( 'Term from', 'duplicate-publish-multisite' ); ?></strong></p>
+					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][category]' class="source-category">
+						<?php
+						$category = ! empty( $this->publish_mu_setttings['musite'][ $idx ]['category'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['category'] : '';
+						$category_options = isset( $category_options[ $post_type ] ) ? $category_options[ $post_type ] : array();
+						// Load Post type Options.
+						foreach ( $category_options as $key => $value ) {
+							echo '<option value="' . esc_html( $key ) . '" ';
+							selected( $key, $taxonomy );
+							echo '>' . esc_html( $value ) . '</option>';
+						}
+						?>
+					</select>
+				</div>
+				<div class="save-item">
 					<p><strong><?php esc_html_e( 'Site to publish', 'duplicate-publish-multisite' ); ?></strong></p>
 					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][site]' class="site-publish" data-row="<?php echo esc_html( $idx ); ?>">
 						<option value=''></option>
