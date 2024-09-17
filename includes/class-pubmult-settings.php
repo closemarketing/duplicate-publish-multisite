@@ -253,7 +253,6 @@ class PUBMULT_Settings {
 		$sites_options     = HELPER::get_sites_publish();
 		$post_type_options = HELPER::get_post_types();
 		$taxonomy_options  = HELPER::get_taxonomies();
-		$category_options  = HELPER::get_terms_from();
 		$size              = isset( $this->publish_mu_setttings['musite'] ) ? count( $this->publish_mu_setttings['musite'] ) - 1 : 0;
 
 		for ( $idx = 0, $size; $idx <= $size; ++$idx ) {
@@ -315,7 +314,7 @@ class PUBMULT_Settings {
 					} else {
 						$terms_checked = explode( ',', $target_cat );
 					}
-					$cats_target_options = HELPER::get_terms_from( $site_target );
+					$cats_target_options = HELPER::get_terms_from( $site_target, $taxonomy, $post_type );
 					echo '<label class="category-publish" for="[musite][' . esc_html( $idx ) . '][label]">';
 					// Load Page Options.
 					echo '<div class="options">';
@@ -336,13 +335,15 @@ class PUBMULT_Settings {
 					array_multisort( $keys, SORT_DESC, $ord_cats_target );
 
 					foreach ( $ord_cats_target as $cat ) {
-						echo '<p><input type="checkbox" id="catid-row-' . esc_html( $idx ) . '-' . esc_html( $cat['key'] ) . '" ';
+						$input_key = 'catid-row-' . esc_html( $idx ) . '-' . esc_html( $cat['key'] );
+						echo '<p><input type="checkbox" id="' . esc_html( $input_key ) . '" ';
 						echo 'name="publish_mu_setttings[musite][' . esc_html( $idx ) . '][target_cat_' . esc_html( $cat['key'] ) . ']"';
 						echo ' value="1"';
 						if ( $cat['selected'] ) {
 							echo ' checked="checked" ';
 						}
-						echo '/>' . esc_html( $cat['value'] ) . '</p>';
+						echo '/>';
+						echo '<label for="' . esc_html( $input_key ) . '">' . esc_html( $cat['value'] ) . '</label></p>';
 					}
 					echo '</div></label>';
 					?>
