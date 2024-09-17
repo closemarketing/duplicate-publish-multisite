@@ -53,6 +53,7 @@ class PUBMULT_Publish {
 	public function __construct() {
 		$this->options = get_option( 'publish_mu_setttings' );
 		// Publish to other site.
+		add_action( 'publish_post', array( $this, 'publish_other_site' ), 5, 2 );
 		add_action( 'save_post', array( $this, 'publish_other_site' ), 5, 3 );
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'scripts_sync_all_entries' ) );
@@ -68,13 +69,36 @@ class PUBMULT_Publish {
 	 * @param boolean $update Update.
 	 * @return void
 	 */
-	public function publish_other_site( $post_id, $post, $update ) {
+	public function publish_other_site( $post_id, $post, $update = false ) {
+		// Autosave, do nothing.
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return;
+		}
+		// AJAX? Not used here.
+		if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+			return;
+		}
+
+		// Return if it's a post revision.
+		if ( false !== wp_is_post_revision( $post_id ) ) {
+			return;
+		}
+
+		if ( wp_is_post_autosave( $post_id ) ) {
+			return;
+		}
+
+		if ( 'auto-draft' === $post->post_status || 'inherit' === $post->post_status ) {
+			return;
+		}
+
 		// Only set for post_type = post! or isset options.
 		if ( empty( $this->options['musite'] ) ) {
 			return;
 		}
 		$post_type_saved = ! empty( $post->post_type ) ? $post->post_type : 'post';
 		$search_key      = array_search( $post_type_saved, array_column( $this->options['musite'], 'post_type' ), true );
+
 		if ( false === $search_key ) {
 			return;
 		}
