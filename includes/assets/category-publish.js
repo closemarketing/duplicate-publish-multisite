@@ -3,6 +3,7 @@ jQuery(document).ready(function($) {
 		e.preventDefault();
 
 		post_type = $(this).closest('.publishmu').find('.source-post_type').val();
+		taxpub_parent = $(this).closest('.publishmu').find('.source-taxonomy_parent');
 		taxpub = $(this).closest('.publishmu').find('.source-taxonomy');
 		catpub = $(this).closest('.publishmu').find('.category-publish .options');
 		authpub = $(this).closest('.publishmu').find('.author-publish');
@@ -16,6 +17,7 @@ jQuery(document).ready(function($) {
 				action: 'category_publish',
 				site_id: site_id,
 				post_type: post_type,
+				taxonomy_parent: taxpub.val(),
 				taxonomy: taxpub.val(),
 				index: strindex[1],
 				nonce: ajaxAction.nonce

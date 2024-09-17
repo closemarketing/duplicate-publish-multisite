@@ -274,9 +274,9 @@ class PUBMULT_Settings {
 				</div>
 				<div class="save-item">
 					<p><strong><?php esc_html_e( 'Taxonomy', 'duplicate-publish-multisite' ); ?></strong></p>
-					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][taxonomy]' class="source-taxonomy">
+					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][taxonomy_parent]' class="source-taxonomy_parent">
 						<?php
-						$taxonomy = ! empty( $this->publish_mu_setttings['musite'][ $idx ]['taxonomy'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['taxonomy'] : '';
+						$taxonomy = ! empty( $this->publish_mu_setttings['musite'][ $idx ]['taxonomy_parent'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['taxonomy_parent'] : '';
 						$taxonomy_options = isset( $taxonomy_options[ $post_type ] ) ? $taxonomy_options[ $post_type ] : array();
 						// Load Post type Options.
 						foreach ( $taxonomy_options as $key => $value ) {
@@ -288,15 +288,16 @@ class PUBMULT_Settings {
 					</select>
 				</div>
 				<div class="save-item">
-					<p><strong><?php esc_html_e( 'Term from', 'duplicate-publish-multisite' ); ?></strong></p>
-					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][category]' class="source-category">
+					<p><strong><?php esc_html_e( 'Term from load', 'duplicate-publish-multisite' ); ?></strong></p>
+					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][taxonomy]' class="source-category">
 						<?php
-						$category = ! empty( $this->publish_mu_setttings['musite'][ $idx ]['category'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['category'] : '';
+						// retrocompatibility used taxonomy for term.
+						$term = ! empty( $this->publish_mu_setttings['musite'][ $idx ]['taxonomy'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['taxonomy'] : '';
 						$category_options = isset( $category_options[ $post_type ] ) ? $category_options[ $post_type ] : array();
 						// Load Post type Options.
 						foreach ( $category_options as $key => $value ) {
 							echo '<option value="' . esc_html( $key ) . '" ';
-							selected( $key, $taxonomy );
+							selected( $key, $term );
 							echo '>' . esc_html( $value ) . '</option>';
 						}
 						?>
