@@ -212,23 +212,33 @@ class PUBMULT_Settings {
 	 * @return void
 	 */
 	public function category_publish() {
-		$site_id = isset( $_POST['site_id'] ) ? sanitize_key( $_POST['site_id'] ) : '';
-		$index   = isset( $_POST['index'] ) ? sanitize_key( $_POST['index'] ) : '';
+		$site_id   = isset( $_POST['site_id'] ) ? (int) $_POST['site_id'] : 0;
+		$index     = isset( $_POST['index'] ) ? sanitize_key( $_POST['index'] ) : '';
+		$post_type = isset( $_POST['post_type'] ) ? sanitize_key( $_POST['post_type'] ) : '';
+		$taxonomy  = isset( $_POST['taxonomy'] ) ? sanitize_key( $_POST['taxonomy'] ) : '';
 
 		if ( check_ajax_referer( 'category_publish_nonce', 'nonce' ) ) {
+			$html_tax   = '';
+			$taxonomies = HELPER::get_taxonomies( $post_type );
+			foreach ( $taxonomies as $key => $value ) {
+				$html_tax .= '<option value="' . esc_html( $key ) . '"';
+				if ( $key === $taxonomy ) {
+					$html_tax .= ' selected';
+				}
+				$html_tax .= '>' . esc_html( $value ) . '</option>';
+			}
 			$html_cat = '';
-			foreach ( HELPER::get_categories_from( $site_id ) as $key => $value ) {
-				//$html_cat .= '<option value="' . esc_html( $key ) . '" >' . esc_html( $value ) . '</option>';
+			foreach ( HELPER::get_terms_from( $site_id, $taxonomy, $post_type ) as $key => $value ) {
 				$html_cat .= '<p><input type="checkbox"';
-				$html_cat .= 'name="publish_mu_setttings[musite][' . esc_html( $index ) . '][target_cat_' . esc_html( $key ) . ']"';
+				$html_cat .= ' name="publish_mu_setttings[musite][' . esc_html( $index ) . '][target_cat_' . esc_html( $key ) . ']" id="' . esc_html( $key ) . '"';
 				$html_cat .= ' value="' . esc_html( $key ) . '"';
-				$html_cat .= '/>' . esc_html( $value ) . '</p>';
+				$html_cat .= '/><label for="' . esc_html( $key ) . '">' . esc_html( $value ) . '</label></p>';
 			}
 			$html_auth = '';
 			foreach ( HELPER::get_authors_from( $site_id ) as $key => $value ) {
-				$html_auth .= '<option value="' . esc_html( $key ) . '" >' . esc_html( $value ) . '</option>';
+				$html_auth .= '<option value="' . esc_html( $key ) . '">' . esc_html( $value ) . '</option>';
 			}
-			wp_send_json_success( array( $html_cat, $html_auth ) );
+			wp_send_json_success( array( $html_tax, $html_cat, $html_auth ) );
 		} else {
 			wp_send_json_error( array( 'error' => 'Error' ) );
 		}
@@ -242,7 +252,8 @@ class PUBMULT_Settings {
 	public function musite_callback() {
 		$sites_options     = HELPER::get_sites_publish();
 		$post_type_options = HELPER::get_post_types();
-		$category_options  = HELPER::get_categories_from();
+		$taxonomy_options  = HELPER::get_taxonomies();
+		$category_options  = HELPER::get_terms_from();
 		$size              = isset( $this->publish_mu_setttings['musite'] ) ? count( $this->publish_mu_setttings['musite'] ) - 1 : 0;
 
 		for ( $idx = 0, $size; $idx <= $size; ++$idx ) {
@@ -263,13 +274,13 @@ class PUBMULT_Settings {
 					</select>
 				</div>
 				<div class="save-item">
-					<p><strong><?php esc_html_e( 'Category from load', 'duplicate-publish-multisite' ); ?></strong></p>
-					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][taxonomy]' class="source-category">
-						<option value=''></option>
+					<p><strong><?php esc_html_e( 'Taxonomy', 'duplicate-publish-multisite' ); ?></strong></p>
+					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][taxonomy]' class="source-taxonomy">
 						<?php
-						$taxonomy = isset( $this->publish_mu_setttings['musite'][ $idx ]['taxonomy'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['taxonomy'] : '';
-						// Load Page Options.
-						foreach ( $category_options as $key => $value ) {
+						$taxonomy = ! empty( $this->publish_mu_setttings['musite'][ $idx ]['taxonomy'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['taxonomy'] : '';
+						$taxonomy_options = isset( $taxonomy_options[ $post_type ] ) ? $taxonomy_options[ $post_type ] : array();
+						// Load Post type Options.
+						foreach ( $taxonomy_options as $key => $value ) {
 							echo '<option value="' . esc_html( $key ) . '" ';
 							selected( $key, $taxonomy );
 							echo '>' . esc_html( $value ) . '</option>';
@@ -295,7 +306,7 @@ class PUBMULT_Settings {
 				<div class="save-item options-select">
 					<p><strong><?php esc_html_e( 'Category to publish', 'duplicate-publish-multisite' ); ?></strong></p>
 					<?php
-					$site_target = isset( $this->publish_mu_setttings['musite'][ $idx ]['site'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['site'] : '';
+					$site_target = isset( $this->publish_mu_setttings['musite'][ $idx ]['site'] ) ? (int) $this->publish_mu_setttings['musite'][ $idx ]['site'] : 0;
 					$target_cat  = isset( $this->publish_mu_setttings['musite'][ $idx ]['target_cat'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['target_cat'] : '';
 					if ( strpos( $target_cat, '|' ) ) {
 						// old method.
@@ -304,7 +315,7 @@ class PUBMULT_Settings {
 					} else {
 						$terms_checked = explode( ',', $target_cat );
 					}
-					$cats_target_options = HELPER::get_categories_from( $site_target );
+					$cats_target_options = HELPER::get_terms_from( $site_target );
 					echo '<label class="category-publish" for="[musite][' . esc_html( $idx ) . '][label]">';
 					// Load Page Options.
 					echo '<div class="options">';
