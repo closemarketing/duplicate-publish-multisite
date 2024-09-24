@@ -338,7 +338,7 @@ class PUBMULT_Settings {
 					</select>
 				</div>
 				<div class="save-item options-select">
-					<p><strong><?php esc_html_e( 'Category to publish', 'duplicate-publish-multisite' ); ?></strong></p>
+					<p><strong><?php esc_html_e( 'Taxonomy to publish', 'duplicate-publish-multisite' ); ?></strong></p>
 					<?php
 					$site_target = isset( $this->publish_mu_setttings['musite'][ $idx ]['site'] ) ? (int) $this->publish_mu_setttings['musite'][ $idx ]['site'] : 0;
 					$target_cat  = isset( $this->publish_mu_setttings['musite'][ $idx ]['target_cat'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['target_cat'] : '';

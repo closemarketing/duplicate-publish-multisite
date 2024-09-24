@@ -53,7 +53,6 @@ class PUBMULT_Publish {
 	public function __construct() {
 		$this->options = get_option( 'publish_mu_setttings' );
 		// Publish to other site.
-		add_action( 'publish_post', array( $this, 'publish_other_site' ), 5, 2 );
 		add_action( 'save_post', array( $this, 'publish_other_site' ), 5, 3 );
 
 		add_action( 'admin_enqueue_scripts', array( $this, 'scripts_sync_all_entries' ) );
@@ -127,7 +126,7 @@ class PUBMULT_Publish {
 			}
 			if ( has_term( $check_terms, $tax_name, $post->ID ) ) {
 				$target_post_id = get_post_meta( $post->ID, 'publish_mu_site_' . $site['site'], true );
-				$this->update_post( $site['site'], $post->ID, $target_post_id, $target_author, $target_cats, $is_image_changed );
+				$this->update_post( (int) $site['site'], $post->ID, $target_post_id, $target_author, $target_cats, $is_image_changed );
 			}
 		}
 	}
@@ -159,7 +158,7 @@ class PUBMULT_Publish {
 		switch_to_blog( $target_site );
 
 		// Prevents infinite loop.
-		remove_action( 'save_post_post', array( $this, 'publish_other_site' ), 5 );
+		remove_action( 'save_post', array( $this, 'publish_other_site' ), 5 );
 
 		$post_arg = array(
 			'post_title'   => $source_post->post_title,
@@ -219,7 +218,8 @@ class PUBMULT_Publish {
 			wp_set_post_terms(
 				$target_post_id,
 				$cats_id,
-				$term_cat_name
+				$term_cat_name,
+				true
 			);
 		}
 
@@ -290,6 +290,12 @@ class PUBMULT_Publish {
 	 * @return void
 	 */
 	private function adds_seo_tags( $url, $post_id ) {
+		include_once ABSPATH . 'wp-admin/includes/plugin.php';
+
+		if ( ! function_exists( 'is_plugin_active' ) ) {
+			return;
+		}
+
 		if ( is_plugin_active( 'seo-by-rank-math/rank-math.php' ) ) {
 			add_post_meta( $post_id, 'rank_math_canonical_url', $url );
 		} elseif ( is_plugin_active( 'wordpress-seo/wp-seo.php' ) || is_plugin_active( 'wordpress-seo-premium/wp-seo-premium.php' ) ) {
@@ -443,6 +449,4 @@ class PUBMULT_Publish {
 	}
 }
 
-if ( is_admin() ) {
-	new PUBMULT_Publish();
-}
+new PUBMULT_Publish();
