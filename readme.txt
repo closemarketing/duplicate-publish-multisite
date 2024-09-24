@@ -28,6 +28,9 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Developers ==
 
 == Changelog =
+= 1.7.0 =
+*	 Added: You can now select the post type and taxonomy from you want to copy and publish.
+
 = 1.6.2 =
 *	 Fix: loads only first 100 sites to publish.
 
