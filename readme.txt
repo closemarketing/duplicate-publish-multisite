@@ -1,11 +1,11 @@
 === Publish Duplicate Post to Multisite ===
-Contributors: closemarketing, davidperez, sacrajaimez
+Contributors: closemarketing, davidperez, sacrajaimez, alexbreagarcia
 Tags: multisite, duplicate, sync posts
 Donate link: https://close.marketing/go/donate/ 
 Requires at least: 4.0
 Tested up to: 6.6
-Stable tag: 1.6.2
-Version: 1.6.2
+Stable tag: 1.7.0
+Version: 1.7.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
