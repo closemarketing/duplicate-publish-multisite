@@ -298,9 +298,9 @@ class PUBMULT_Settings {
 					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][taxonomy_parent]' class="source-taxonomy_parent">
 						<?php
 						$taxonomy = ! empty( $this->publish_mu_setttings['musite'][ $idx ]['taxonomy_parent'] ) ? $this->publish_mu_setttings['musite'][ $idx ]['taxonomy_parent'] : '';
-						$taxonomy_options = isset( $taxonomy_options[ $post_type ] ) ? $taxonomy_options[ $post_type ] : array();
+						$taxonomy_options_sel = isset( $taxonomy_options[ $post_type ] ) ? $taxonomy_options[ $post_type ] : array();
 						// Load Post type Options.
-						foreach ( $taxonomy_options as $key => $value ) {
+						foreach ( $taxonomy_options_sel as $key => $value ) {
 							echo '<option value="' . esc_html( $key ) . '" ';
 							selected( $key, $taxonomy );
 							echo '>' . esc_html( $value ) . '</option>';
