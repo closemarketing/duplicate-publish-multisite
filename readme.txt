@@ -4,8 +4,8 @@ Tags: multisite, duplicate, sync posts
 Donate link: https://close.marketing/go/donate/ 
 Requires at least: 4.0
 Tested up to: 6.6
-Stable tag: 1.7.0
-Version: 1.7.0
+Stable tag: 1.7.1
+Version: 1.7.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
