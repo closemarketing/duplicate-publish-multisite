@@ -9,6 +9,7 @@ jQuery(document).ready(function($) {
 		authpub = $(this).closest('.publishmu').find('.author-publish');
 		site_id = $(this).closest('.publishmu').find('.site-publish').val();
 		strindex = $(this).closest('.publishmu').find('.category-publish').attr('for').replaceAll('][',',').replace('[','').replace(']','').split(',');
+		let nonce = $( this ).closest('.publishmu').find('#nonce').val();
 
 		$.ajax({
 			type: 'POST',
@@ -20,7 +21,7 @@ jQuery(document).ready(function($) {
 				taxonomy_parent: taxpub_parent.val(),
 				taxonomy: taxpub.val(),
 				index: strindex[1],
-				nonce: ajaxAction.nonce
+				nonce: nonce
 			},
 			beforeSend: function() { $(".category-publish-action .spinner").addClass("is-active"); },
 			complete: function() { $(".category-publish-action .spinner").removeClass("is-active"); },

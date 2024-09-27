@@ -28,6 +28,9 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Developers ==
 
 == Changelog =
+= 1.7.1 =
+*	 Fix: Bug related to validation of nonce's when multiple conditions were configured.
+
 = 1.7.0 =
 *	 Added: You can now select the post type and taxonomy from you want to copy and publish.
 

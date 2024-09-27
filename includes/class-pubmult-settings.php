@@ -277,6 +277,9 @@ class PUBMULT_Settings {
 			?>
 			<div class="publishmu repeating" style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
 				<div class="save-item">
+					<?php wp_nonce_field( 'category_publish_nonce', 'nonce' ); ?>
+				</div>
+				<div class="save-item">
 					<p><strong><?php esc_html_e( 'Post type', 'duplicate-publish-multisite' ); ?></strong></p>
 					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][post_type]' class="source-post_type">
 						<?php
