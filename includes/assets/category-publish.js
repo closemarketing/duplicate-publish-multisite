@@ -9,7 +9,8 @@ jQuery(document).ready(function($) {
 		authpub = $(this).closest('.publishmu').find('.author-publish');
 		site_id = $(this).closest('.publishmu').find('.site-publish').val();
 		strindex = $(this).closest('.publishmu').find('.category-publish').attr('for').replaceAll('][',',').replace('[','').replace(']','').split(',');
-		let nonce = $( this ).closest('.publishmu').find('#nonce').val();
+		//let nonce = $( this ).closest('.publishmu').find('#nonce').val();
+		let nonce = ajaxAction.nonce;
 
 		$.ajax({
 			type: 'POST',
