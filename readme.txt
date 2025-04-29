@@ -28,6 +28,9 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Developers ==
 
 == Changelog =
+= 1.7.2 =
+*   Fix: Empty nonce when duplicating elements.
+
 = 1.7.1 =
 *	 Fix: Bug related to validation of nonce's when multiple conditions were configured.
 
