@@ -39,9 +39,6 @@ class PUBMULT_Settings {
 		// AJAX.
 		add_action( 'wp_ajax_category_publish', array( $this, 'category_publish' ) );
 		add_action( 'wp_ajax_nopriv_category_publish', array( $this, 'category_publish' ) );
-
-		add_action('wp_ajax_get_taxonomies_for_post_type', array($this, 'get_taxonomies_for_post_type'));
-		add_action('wp_ajax_nopriv_get_taxonomies_for_post_type', array($this, 'get_taxonomies_for_post_type'));
 	}
 
 	/**
@@ -453,30 +450,7 @@ class PUBMULT_Settings {
 		</script>
 		<?php
 	}
-
-	/**
-	 * Ajax function to get taxonomies for post type
-	 */
-	public function get_taxonomies_for_post_type() {
-		$post_type = isset($_POST['post_type']) ? sanitize_key($_POST['post_type']) : '';
-		
-		if (check_ajax_referer('category_publish_nonce', 'nonce')) {
-			$html_options = '';
-			$taxonomies = HELPER::get_taxonomies($post_type);
-			
-			if (!empty($taxonomies)) {
-				foreach ($taxonomies as $key => $value) {
-						$html_options .= '<option value="' . esc_html($key) . '">' . esc_html($value) . '</option>';
-				}
-			}
-			
-			wp_send_json_success($html_options);
-		} else {
-			wp_send_json_error(array('error' => 'Invalid nonce'));
-		}
-	}
 }
-
 if ( is_admin() ) {
 	new PUBMULT_Settings();
 }
