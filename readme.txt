@@ -28,6 +28,9 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Developers ==
 
 == Changelog =
+= 1.7.3 =
+*   Fix: Post categories load.
+
 = 1.7.2 =
 *   Fix: Empty nonce when duplicating elements.
 
