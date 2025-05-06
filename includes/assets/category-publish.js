@@ -1,4 +1,42 @@
 jQuery(document).ready(function($) {
+
+	$('.source-post_type').change(function(e) {
+		e.preventDefault();
+		
+		var $container = $(this).closest('.publishmu');
+		var post_type = $(this).val();
+		var site_id = $container.find('.site-publish').val();
+		var strindex = $container.find('.category-publish').attr('for').replaceAll('][',',').replace('[','').replace(']','').split(',');
+		var nonce = ajaxAction.nonce;
+		
+		// Primero cargar las taxonomías disponibles para este tipo de post
+		$.ajax({
+			 type: 'POST',
+			 url: ajaxAction.url,
+			 data: {
+				  action: 'get_taxonomies_for_post_type',
+				  post_type: post_type,
+				  site_id: site_id,
+				  index: strindex[1],
+				  nonce: nonce
+			 },
+			 success: function(response){
+				  if(response.success) {
+						// Actualizar el dropdown de taxonomías
+						$container.find('.source-taxonomy_parent').html(response.data);
+						
+						// Disparar el evento change para cargar los términos de la taxonomía seleccionada
+						$container.find('.source-taxonomy_parent').trigger('change');
+				  }
+			 },
+			 error: function(xhr, textStatus, error) {
+				  console.log(xhr.statusText);
+				  console.log(textStatus);
+				  console.log(error);
+			 }
+		});
+  });
+  
 	$('.source-post_type, .source-taxonomy_parent, .source-taxonomy, .site-publish').change(function(e) {
 		e.preventDefault();
 
