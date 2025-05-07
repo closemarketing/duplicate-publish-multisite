@@ -38,7 +38,10 @@ jQuery(document).ready(function($) {
 				index: strindex[1],
 				nonce: nonce
 			},
-			beforeSend: function() { $(".category-publish-action .spinner").addClass("is-active"); },
+			beforeSend: function(xhr) {
+				$(".category-publish-action .spinner").addClass("is-active");
+				xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+			},
 			complete: function() { $(".category-publish-action .spinner").removeClass("is-active"); },
 			success: function(response){
 				taxpub_parent.empty().append(response.data[0]);
@@ -47,9 +50,10 @@ jQuery(document).ready(function($) {
 				authpub.empty().append(response.data[3]);
 			},
 			error: function(xhr, textStatus, error) {
-				console.log(xhr.statusText);
-				console.log(textStatus);
-				console.log(error);
+				console.log("AJAX Error Status:", xhr.status);
+				console.log("AJAX Error Status Text:", xhr.statusText);
+				console.log("AJAX Error:", textStatus);
+				console.log("AJAX Error Message:", error);
 			}
 		});
 	});
