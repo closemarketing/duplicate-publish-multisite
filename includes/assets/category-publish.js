@@ -24,11 +24,10 @@ jQuery(document).ready(function($) {
 
 		strindex = $(this).closest('.publishmu').find('.category-publish').attr('for').replaceAll('][',',').replace('[','').replace(']','').split(',');
 		//let nonce = $( this ).closest('.publishmu').find('#nonce').val();
-		let nonce = ajaxAction.nonce;
 
 		$.ajax({
 			type: 'POST',
-			url: ajaxAction.url,
+			url: pubmult_ajaxAction.url,
 			data: {
 				action: 'category_publish',
 				site_id: site_id,
@@ -36,7 +35,7 @@ jQuery(document).ready(function($) {
 				taxonomy_parent: taxpub_parent.val(),
 				taxonomy: taxpub.val(),
 				index: strindex[1],
-				nonce: nonce
+				nonce: pubmult_ajaxAction.nonce,
 			},
 			beforeSend: function(xhr) {
 				$(".category-publish-action .spinner").addClass("is-active");

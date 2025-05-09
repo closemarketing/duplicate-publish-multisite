@@ -79,7 +79,7 @@ class PUBMULT_Settings {
 
 		wp_localize_script(
 			'category-publish',
-			'ajaxAction',
+			'pubmult_ajaxAction',
 			array(
 				'url'   => admin_url( 'admin-ajax.php' ),
 				'nonce' => wp_create_nonce( 'category_publish_nonce' ),
@@ -218,47 +218,48 @@ class PUBMULT_Settings {
 		$taxonomy_parent = isset( $_POST['taxonomy_parent'] ) ? sanitize_key( $_POST['taxonomy_parent'] ) : '';
 		$term            = isset( $_POST['taxonomy'] ) ? sanitize_key( $_POST['taxonomy'] ) : '';
 
-		if ( check_ajax_referer( 'category_publish_nonce', 'nonce' ) ) {
-			$html_tax   = '';
-			$taxonomies = HELPER::get_taxonomies( $post_type );
-			foreach ( $taxonomies as $key => $value ) {
-				$html_tax .= '<option value="' . esc_html( $key ) . '"';
-				if ( $key === $taxonomy_parent ) {
-					$html_tax .= ' selected';
-				}
-				$html_tax .= '>' . esc_html( $value ) . '</option>';
-			}
-
-			// Options Source Terms.
-			$html_source_term = '';
-			$source_site_id   = get_current_blog_id();
-			foreach ( HELPER::get_terms_from( $source_site_id, $taxonomy_parent, $post_type ) as $key => $value ) {
-				$html_source_term .= '<option value="' . esc_html( $key ) . '"';
-				if ( $key === $term ) {
-					$html_source_term .= ' selected';
-				}
-				$html_source_term .= '>' . esc_html( $value ) . '</option>';
-			}
-
-			// Options Target Terms.
-			$html_target_term = '';
-			foreach ( HELPER::get_terms_from( $site_id, $taxonomy_parent, $post_type ) as $key => $value ) {
-				$html_target_term .= '<p><input type="checkbox"';
-				$html_target_term .= ' name="publish_mu_setttings[musite][' . esc_html( $index ) . '][target_cat_' . esc_html( $key ) . ']" id="' . esc_html( $key ) . '"';
-				$html_target_term .= ' value="' . esc_html( $key ) . '"';
-				$html_target_term .= '/><label for="' . esc_html( $key ) . '">' . esc_html( $value ) . '</label></p>';
-			}
-
-			// Options Target author.
-			$html_auth = '';
-			foreach ( HELPER::get_authors_from( $site_id ) as $key => $value ) {
-				$html_auth .= '<option value="' . esc_html( $key ) . '">' . esc_html( $value ) . '</option>';
-			}
-			error_log( 'return: ' . print_r( array( $html_tax, $html_source_term, $html_target_term, $html_auth ) , true ) );
-			wp_send_json_success( array( $html_tax, $html_source_term, $html_target_term, $html_auth ) );
-		} else {
+		if ( ! check_ajax_referer( 'category_publish_nonce', 'nonce' ) ) {
 			wp_send_json_error( array( 'error' => 'Error' ) );
 		}
+
+		$html_tax   = '';
+		$taxonomies = HELPER::get_taxonomies( $post_type );
+		foreach ( $taxonomies as $key => $value ) {
+			$html_tax .= '<option value="' . esc_html( $key ) . '"';
+			if ( $key === $taxonomy_parent ) {
+				$html_tax .= ' selected';
+			}
+			$html_tax .= '>' . esc_html( $value ) . '</option>';
+		}
+
+		// Options Source Terms.
+		$html_source_term = '';
+		$source_site_id   = get_current_blog_id();
+		foreach ( HELPER::get_terms_from( $source_site_id, $taxonomy_parent, $post_type ) as $key => $value ) {
+			$html_source_term .= '<option value="' . esc_html( $key ) . '"';
+			if ( $key === $term ) {
+				$html_source_term .= ' selected';
+			}
+			$html_source_term .= '>' . esc_html( $value ) . '</option>';
+		}
+
+		// Options Target Terms.
+		$html_target_term = '';
+		foreach ( HELPER::get_terms_from( $site_id, $taxonomy_parent, $post_type ) as $key => $value ) {
+			$html_target_term .= '<p><input type="checkbox"';
+			$html_target_term .= ' name="publish_mu_setttings[musite][' . esc_html( $index ) . '][target_cat_' . esc_html( $key ) . ']" id="' . esc_html( $key ) . '"';
+			$html_target_term .= ' value="' . esc_html( $key ) . '"';
+			$html_target_term .= '/><label for="' . esc_html( $key ) . '">' . esc_html( $value ) . '</label></p>';
+		}
+
+		// Options Target author.
+		$html_auth = '';
+		foreach ( HELPER::get_authors_from( $site_id ) as $key => $value ) {
+			$html_auth .= '<option value="' . esc_html( $key ) . '">' . esc_html( $value ) . '</option>';
+		}
+		error_log( 'return: ' . print_r( array( $html_tax, $html_source_term, $html_target_term, $html_auth ) , true ) );
+		wp_send_json_success( array( $html_tax, $html_source_term, $html_target_term, $html_auth ) );
+
 	}
 
 	/**
@@ -276,9 +277,6 @@ class PUBMULT_Settings {
 		for ( $idx = 0, $size; $idx <= $size; ++$idx ) {
 			?>
 			<div class="publishmu repeating" style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
-				<div class="save-item">
-					<?php wp_nonce_field( 'category_publish_nonce', 'nonce' ); ?>
-				</div>
 				<div class="save-item">
 					<p><strong><?php esc_html_e( 'Post type', 'duplicate-publish-multisite' ); ?></strong></p>
 					<select name='publish_mu_setttings[musite][<?php echo esc_html( $idx ); ?>][post_type]' class="source-post_type">
