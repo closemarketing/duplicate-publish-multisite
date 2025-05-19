@@ -28,6 +28,9 @@ Extract the zip file and just drop the contents in the wp-content/plugins/ direc
 == Developers ==
 
 == Changelog =
+= 1.7.4 =
+*   Fix: Thumbnail copy.
+
 = 1.7.3 =
 *   Fix: Post categories load.
 
