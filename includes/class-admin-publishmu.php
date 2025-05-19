@@ -150,10 +150,34 @@ class PUBMULT_Publish {
 
 		// Get image data.
 		$post_thumbnail_id = get_post_thumbnail_id( $source_post_id );
-		$image_url         = wp_get_attachment_image_src( $post_thumbnail_id, 'full' );
-		$uploads           = wp_upload_dir();
-		$source_image_path = str_replace( $uploads['baseurl'], $uploads['basedir'], $image_url[0] );
 
+		if ( ! $post_thumbnail_id || ! wp_attachment_is_image( $post_thumbnail_id ) ) {
+      	$is_image_changed = false;
+    	}
+
+		$image_url         = null;
+    	$source_image_path = null;
+
+		if ($is_image_changed && $post_thumbnail_id) {
+      	$image_url = wp_get_attachment_image_src($post_thumbnail_id, 'full');
+        
+        	if ($image_url && is_array($image_url)) {
+            $uploads = wp_upload_dir();
+
+            $source_image_path = get_attached_file( $post_thumbnail_id );
+            
+            if ( ! $source_image_path || ! file_exists( $source_image_path ) ) {
+               $source_image_path = str_replace( $uploads['baseurl'], $uploads['basedir'], $image_url[0] );
+               $source_image_path = preg_replace( '/\?.*/', '', $source_image_path );
+            }
+            
+            if ( ! file_exists( $source_image_path ) ) {
+               $is_image_changed = false;
+            }
+			} else {
+				$is_image_changed = false;
+			}
+    	}
 		// Copy data.
 		switch_to_blog( $target_site );
 
@@ -226,23 +250,18 @@ class PUBMULT_Publish {
 		/**
 		 * ## Thumbnail
 		 * --------------------------- */
-		if ( $is_image_changed ) {
+		if ( $is_image_changed && $source_image_path && file_exists( $source_image_path ) ) {
 			// Add Featured Image to Post.
 			$upload_dir = wp_upload_dir();
-			if ( is_array( $image_url ) ) {
-				$image_url = $image_url[0];
-				$filename  = basename( $image_url );
+			$filename   = basename( $source_image_path );
 
-				// Check folder permission and define file location.
-				if ( wp_mkdir_p( $upload_dir['path'] ) ) {
-					$target_image_path = $upload_dir['path'] . '/' . $filename;
-				} else {
-					$target_image_path = $upload_dir['basedir'] . '/' . $filename;
-				}
+			if ( wp_mkdir_p( $upload_dir['path'] ) ) {
+				$target_image_path = $upload_dir['path'] . '/' . $filename;
+			} else {
+				$target_image_path = $upload_dir['basedir'] . '/' . $filename;
+			}
 
-				// Copies to target folder.
-				copy( $source_image_path, $target_image_path );
-
+			if( copy( $source_image_path, $target_image_path ) ) {
 				// Check image file type.
 				$wp_filetype = wp_check_filetype( $filename, null );
 
@@ -268,6 +287,8 @@ class PUBMULT_Publish {
 
 				// And finally assign featured image to post.
 				set_post_thumbnail( $target_post_id, $attach_id );
+			} else {
+				error_log('Failed to copy image from ' . $source_image_path . ' to ' . $target_image_path);
 			}
 		}
 
