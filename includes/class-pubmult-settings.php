@@ -218,10 +218,15 @@ class PUBMULT_Settings {
 		$taxonomy_parent = isset( $_POST['taxonomy_parent'] ) ? sanitize_key( $_POST['taxonomy_parent'] ) : '';
 		$term            = isset( $_POST['taxonomy'] ) ? sanitize_key( $_POST['taxonomy'] ) : '';
 
-		if ( ! check_ajax_referer( 'category_publish_nonce', 'nonce' ) ) {
-			wp_send_json_error( array( 'error' => 'Error' ) );
+		$valid_nonce = false;
+		if (isset($_POST['nonce'])) {
+			$valid_nonce = wp_verify_nonce($_POST['nonce'], 'category_publish_nonce');
 		}
-
+		if (!$valid_nonce) {
+			wp_send_json_error(array('error' => 'Invalid nonce'));
+			return;
+		}
+		
 		$html_tax   = '';
 		$taxonomies = HELPER::get_taxonomies( $post_type );
 		foreach ( $taxonomies as $key => $value ) {

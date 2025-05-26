@@ -169,13 +169,16 @@ class PUBMULT_Publish {
             if ( ! $source_image_path || ! file_exists( $source_image_path ) ) {
                $source_image_path = str_replace( $uploads['baseurl'], $uploads['basedir'], $image_url[0] );
                $source_image_path = preg_replace( '/\?.*/', '', $source_image_path );
+					error_log('Duplicate Publish Multisite - Source image not found directly. Using alternative path: ' . $source_image_path);
             }
             
             if ( ! file_exists( $source_image_path ) ) {
                $is_image_changed = false;
+					error_log('Duplicate Publish Multisite - Source image file not found at: ' . $source_image_path);
             }
 			} else {
 				$is_image_changed = false;
+				error_log('Duplicate Publish Multisite - Cannot get image URL for thumbnail ID: ' . $post_thumbnail_id);
 			}
     	}
 		// Copy data.
@@ -255,13 +258,29 @@ class PUBMULT_Publish {
 			$upload_dir = wp_upload_dir();
 			$filename   = basename( $source_image_path );
 
-			if ( wp_mkdir_p( $upload_dir['path'] ) ) {
-				$target_image_path = $upload_dir['path'] . '/' . $filename;
-			} else {
-				$target_image_path = $upload_dir['basedir'] . '/' . $filename;
+			$target_dir = $upload_dir['path'];
+			if ( ! file_exists( $target_dir ) ) {
+				wp_mkdir_p( $target_dir );
 			}
 
+			$target_image_path = $upload_dir['path'] . '/' . $filename;
+			
+			$copy_success = false;
+
 			if( copy( $source_image_path, $target_image_path ) ) {
+				$copy_success = true;
+			} else {
+				error_log('Duplicate Publish Multisite - Direct copy failed. Trying file_get_contents/file_put_contents');
+        
+				$file_content = @file_get_contents($source_image_path);
+				if ($file_content !== false) {
+						if (file_put_contents($target_image_path, $file_content) !== false) {
+							$copy_success = true;
+						}
+				}
+			}
+
+			if ( $copy_success ) {
 				// Check image file type.
 				$wp_filetype = wp_check_filetype( $filename, null );
 
