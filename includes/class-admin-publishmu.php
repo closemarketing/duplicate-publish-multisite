@@ -256,7 +256,8 @@ class PUBMULT_Publish {
 		if ( $is_image_changed && $source_image_path && file_exists( $source_image_path ) ) {
 			// Add Featured Image to Post.
 			$upload_dir = wp_upload_dir();
-			$filename   = basename( $source_image_path );
+			$source_image_path_clean = preg_replace('/\?.*/', '', $source_image_path);
+			$filename = basename($source_image_path_clean);
 
 			$target_dir = $upload_dir['path'];
 			if ( ! file_exists( $target_dir ) ) {
