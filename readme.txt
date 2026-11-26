@@ -3,7 +3,7 @@ Contributors: closemarketing, davidperez, sacrajaimez, alexbreagarcia
 Tags: multisite, duplicate, sync posts
 Donate link: https://close.marketing/go/donate/ 
 Requires at least: 4.0
-Tested up to: 6.6
+Tested up to: 7.2
 Stable tag: 1.7.1
 Version: 1.7.1
 License: GPLv2 or later
